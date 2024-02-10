@@ -1,14 +1,15 @@
 module Init exposing (..)
 
+import Browser.Dom
 import Element exposing (px, rgb255)
-import Messages exposing (Msg)
+import Messages exposing (Direction(..), Msg(..))
 import Model exposing (Config, Model)
-import Messages exposing (Direction(..))
+import Task exposing (Task)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( defaultModel, Cmd.none )
+    ( defaultModel, getWindowSize )
 
 
 defaultModel : Model
@@ -19,13 +20,6 @@ defaultModel =
     }
 
 
--- defaultControls : Controls
--- defaultControls =
---     { left = Active
---     , right = Active
---     }
-
-
 
 -- https://colorhunt.co/palette/f4f4f2e8e8e8bbbfca495464
 
@@ -33,11 +27,17 @@ defaultModel =
 defaultConfig : Config
 defaultConfig =
     { bodyBackgroundColor = rgb255 244 244 242
-    , boxWidth = px 360
-    , boxHeight = px 840
-    , mainWidth = px 360
-    , mainHeight = px 720
+    , windowSize = { width = 360, height = 840 }
+    , windowSpacing = 30
+    , mainSize = { width = 360, height = 720 }
     , mainBackgroundColor = rgb255 232 232 232
     , controlsActiveBackgroundColor = rgb255 232 232 232
     , controlsPressedBackgroundColor = rgb255 187 191 202
     }
+
+
+getWindowSize : Cmd Msg
+getWindowSize =
+    Browser.Dom.getViewport
+        |> Task.map (\{ viewport } -> ( viewport.width, viewport.height ))
+        |> Task.perform (\( width, height ) -> ResizeWindow width height)

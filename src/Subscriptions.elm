@@ -4,6 +4,7 @@ import Browser.Events as Events
 import Json.Decode as Decode
 import Messages exposing (Direction(..), Msg(..))
 import Model exposing (Model)
+import Svg.Attributes exposing (to)
 
 
 subscriptions : Model -> Sub Msg
@@ -11,6 +12,7 @@ subscriptions _ =
     Sub.batch
         [ Events.onKeyDown (Decode.map KeyDownDirection keyDecoder)
         , Events.onKeyUp (Decode.map KeyUpDirection keyDecoder)
+        , Events.onResize <| \width height -> ResizeWindow (toFloat width) (toFloat height)
         ]
 
 

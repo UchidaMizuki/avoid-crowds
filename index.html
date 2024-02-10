@@ -5211,10 +5211,6 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Messages$Other = {$: 'Other'};
-var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
-	return {$: 'Px', a: a};
-};
-var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
 var $mdgriffith$elm_ui$Internal$Model$Rgba = F4(
 	function (a, b, c, d) {
 		return {$: 'Rgba', a: a, b: b, c: c, d: d};
@@ -5225,23 +5221,39 @@ var $mdgriffith$elm_ui$Element$rgb255 = F3(
 	});
 var $author$project$Init$defaultConfig = {
 	bodyBackgroundColor: A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 242),
-	boxHeight: $mdgriffith$elm_ui$Element$px(840),
-	boxWidth: $mdgriffith$elm_ui$Element$px(360),
 	controlsActiveBackgroundColor: A3($mdgriffith$elm_ui$Element$rgb255, 232, 232, 232),
 	controlsPressedBackgroundColor: A3($mdgriffith$elm_ui$Element$rgb255, 187, 191, 202),
 	mainBackgroundColor: A3($mdgriffith$elm_ui$Element$rgb255, 232, 232, 232),
-	mainHeight: $mdgriffith$elm_ui$Element$px(720),
-	mainWidth: $mdgriffith$elm_ui$Element$px(360)
+	mainSize: {height: 720, width: 360},
+	windowSize: {height: 840, width: 360},
+	windowSpacing: 30
 };
 var $author$project$Init$defaultModel = {
 	config: $author$project$Init$defaultConfig,
 	direction: $author$project$Messages$Other,
 	position: {x: 60, y: 60}
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Messages$ResizeWindow = F2(
+	function (a, b) {
+		return {$: 'ResizeWindow', a: a, b: b};
+	});
+var $elm$browser$Browser$Dom$getViewport = _Browser_withWindow(_Browser_getViewport);
+var $author$project$Init$getWindowSize = A2(
+	$elm$core$Task$perform,
+	function (_v1) {
+		var width = _v1.a;
+		var height = _v1.b;
+		return A2($author$project$Messages$ResizeWindow, width, height);
+	},
+	A2(
+		$elm$core$Task$map,
+		function (_v0) {
+			var viewport = _v0.viewport;
+			return _Utils_Tuple2(viewport.width, viewport.height);
+		},
+		$elm$browser$Browser$Dom$getViewport));
 var $author$project$Init$init = function (_v0) {
-	return _Utils_Tuple2($author$project$Init$defaultModel, $elm$core$Platform$Cmd$none);
+	return _Utils_Tuple2($author$project$Init$defaultModel, $author$project$Init$getWindowSize);
 };
 var $author$project$Messages$KeyDownDirection = function (a) {
 	return {$: 'KeyDownDirection', a: a};
@@ -5670,6 +5682,22 @@ var $elm$browser$Browser$Events$on = F3(
 	});
 var $elm$browser$Browser$Events$onKeyDown = A2($elm$browser$Browser$Events$on, $elm$browser$Browser$Events$Document, 'keydown');
 var $elm$browser$Browser$Events$onKeyUp = A2($elm$browser$Browser$Events$on, $elm$browser$Browser$Events$Document, 'keyup');
+var $elm$browser$Browser$Events$Window = {$: 'Window'};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$browser$Browser$Events$onResize = function (func) {
+	return A3(
+		$elm$browser$Browser$Events$on,
+		$elm$browser$Browser$Events$Window,
+		'resize',
+		A2(
+			$elm$json$Json$Decode$field,
+			'target',
+			A3(
+				$elm$json$Json$Decode$map2,
+				func,
+				A2($elm$json$Json$Decode$field, 'innerWidth', $elm$json$Json$Decode$int),
+				A2($elm$json$Json$Decode$field, 'innerHeight', $elm$json$Json$Decode$int))));
+};
 var $author$project$Subscriptions$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
@@ -5677,18 +5705,17 @@ var $author$project$Subscriptions$subscriptions = function (_v0) {
 				$elm$browser$Browser$Events$onKeyDown(
 				A2($elm$json$Json$Decode$map, $author$project$Messages$KeyDownDirection, $author$project$Subscriptions$keyDecoder)),
 				$elm$browser$Browser$Events$onKeyUp(
-				A2($elm$json$Json$Decode$map, $author$project$Messages$KeyUpDirection, $author$project$Subscriptions$keyDecoder))
+				A2($elm$json$Json$Decode$map, $author$project$Messages$KeyUpDirection, $author$project$Subscriptions$keyDecoder)),
+				$elm$browser$Browser$Events$onResize(
+				F2(
+					function (width, height) {
+						return A2($author$project$Messages$ResizeWindow, width, height);
+					}))
 			]));
 };
-var $author$project$Update$resetDirection = F2(
-	function (direction, model) {
-		return _Utils_Tuple2(
-			_Utils_eq(direction, model.direction) ? _Utils_update(
-				model,
-				{direction: $author$project$Messages$Other}) : model,
-			$elm$core$Platform$Cmd$none);
-	});
-var $author$project$Update$updatePositionButtonPress = F2(
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Update$updateButtonPressDirection = F2(
 	function (direction, model) {
 		switch (direction.$) {
 			case 'Left':
@@ -5711,7 +5738,7 @@ var $author$project$Update$updatePositionButtonPress = F2(
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Update$updatePositionKeyDown = F2(
+var $author$project$Update$updateKeyDownDirection = F2(
 	function (direction, model) {
 		switch (direction.$) {
 			case 'Left':
@@ -5740,18 +5767,53 @@ var $author$project$Update$updatePositionKeyDown = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Update$updateKeyUpDirection = F2(
+	function (direction, model) {
+		return _Utils_Tuple2(
+			_Utils_eq(direction, model.direction) ? _Utils_update(
+				model,
+				{direction: $author$project$Messages$Other}) : model,
+			$elm$core$Platform$Cmd$none);
+	});
+var $author$project$Update$updateResizeWindow = F3(
+	function (width, height, model) {
+		var ratio = width / height;
+		var config = model.config;
+		var ratioMainSize = config.mainSize.width / config.mainSize.height;
+		var ratiowindowSize = config.windowSize.width / config.windowSize.height;
+		var windowSizeWidth = (_Utils_cmp(ratio, ratiowindowSize) < 0) ? width : (height * ratiowindowSize);
+		var mainSizeWidth = windowSizeWidth;
+		var mainSizeHeight = mainSizeWidth / ratioMainSize;
+		var mainSize = {height: mainSizeHeight, width: mainSizeWidth};
+		var windowSizeHeight = windowSizeWidth / ratiowindowSize;
+		var windowSize = {height: windowSizeHeight, width: windowSizeWidth};
+		var windowSpacing = (config.windowSpacing * windowSizeWidth) / config.windowSize.width;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					config: _Utils_update(
+						config,
+						{mainSize: mainSize, windowSize: windowSize, windowSpacing: windowSpacing})
+				}),
+			$elm$core$Platform$Cmd$none);
+	});
 var $author$project$Update$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'KeyDownDirection':
 				var direction = msg.a;
-				return A2($author$project$Update$updatePositionKeyDown, direction, model);
+				return A2($author$project$Update$updateKeyDownDirection, direction, model);
 			case 'KeyUpDirection':
 				var direction = msg.a;
-				return A2($author$project$Update$resetDirection, direction, model);
-			default:
+				return A2($author$project$Update$updateKeyUpDirection, direction, model);
+			case 'ButtonPressDirection':
 				var direction = msg.a;
-				return A2($author$project$Update$updatePositionButtonPress, direction, model);
+				return A2($author$project$Update$updateButtonPressDirection, direction, model);
+			default:
+				var width = msg.a;
+				var height = msg.b;
+				return A3($author$project$Update$updateResizeWindow, width, height, model);
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$Colored = F3(
@@ -11573,6 +11635,10 @@ var $mdgriffith$elm_ui$Element$column = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
+var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
+	return {$: 'Px', a: a};
+};
+var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
 var $mdgriffith$elm_ui$Internal$Model$SpacingStyle = F3(
 	function (a, b, c) {
 		return {$: 'SpacingStyle', a: a, b: b, c: c};
@@ -11990,7 +12056,10 @@ var $author$project$View$viewControls = function (model) {
 			[
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-				A2($mdgriffith$elm_ui$Element$spacingXY, 30, 0)
+				A2(
+				$mdgriffith$elm_ui$Element$spacingXY,
+				$elm$core$Basics$floor(model.config.windowSpacing),
+				0)
 			]),
 		_List_fromArray(
 			[
@@ -12014,23 +12083,32 @@ var $author$project$View$viewMain = function (model) {
 		_List_fromArray(
 			[
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-				$mdgriffith$elm_ui$Element$height(model.config.mainHeight),
+				$mdgriffith$elm_ui$Element$height(
+				$mdgriffith$elm_ui$Element$px(
+					$elm$core$Basics$floor(model.config.mainSize.height))),
 				$mdgriffith$elm_ui$Element$Background$color(model.config.mainBackgroundColor),
 				$mdgriffith$elm_ui$Element$centerX
 			]),
 		$mdgriffith$elm_ui$Element$text(
 			$elm$core$String$fromInt(model.position.x)));
 };
-var $author$project$View$viewBox = function (model) {
+var $author$project$View$viewWindow = function (model) {
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
 			[
-				$mdgriffith$elm_ui$Element$width(model.config.boxWidth),
-				$mdgriffith$elm_ui$Element$height(model.config.boxHeight),
+				$mdgriffith$elm_ui$Element$width(
+				$mdgriffith$elm_ui$Element$px(
+					$elm$core$Basics$floor(model.config.windowSize.width))),
+				$mdgriffith$elm_ui$Element$height(
+				$mdgriffith$elm_ui$Element$px(
+					$elm$core$Basics$floor(model.config.windowSize.height))),
 				$mdgriffith$elm_ui$Element$centerX,
 				$mdgriffith$elm_ui$Element$centerY,
-				A2($mdgriffith$elm_ui$Element$spacingXY, 0, 30)
+				A2(
+				$mdgriffith$elm_ui$Element$spacingXY,
+				0,
+				$elm$core$Basics$floor(model.config.windowSpacing))
 			]),
 		_List_fromArray(
 			[
@@ -12054,7 +12132,7 @@ var $author$project$View$view = function (model) {
 						end: {line: 17, column: 37}
 					}))
 			]),
-		$author$project$View$viewBox(model));
+		$author$project$View$viewWindow(model));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Init$init, subscriptions: $author$project$Subscriptions$subscriptions, update: $author$project$Update$update, view: $author$project$View$view});

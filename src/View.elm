@@ -17,17 +17,17 @@ view model =
         , Element.explain Debug.todo
         ]
     <|
-        viewBox model
+        viewWindow model
 
 
-viewBox : Model -> Element Msg
-viewBox model =
+viewWindow : Model -> Element Msg
+viewWindow model =
     column
-        [ width model.config.boxWidth
-        , height model.config.boxHeight
+        [ width <| Element.px <| floor model.config.windowSize.width
+        , height <| Element.px <| floor model.config.windowSize.height
         , centerX
         , centerY
-        , spacingXY 0 30
+        , spacingXY 0 (floor model.config.windowSpacing)
         ]
         [ viewMain model
         , viewControls model
@@ -38,7 +38,7 @@ viewMain : Model -> Element Msg
 viewMain model =
     el
         [ width fill
-        , height model.config.mainHeight
+        , height <| Element.px <| floor model.config.mainSize.height
         , Background.color model.config.mainBackgroundColor
         , centerX
         ]
@@ -47,12 +47,17 @@ viewMain model =
             String.fromInt model.position.x
 
 
+
+-- FIXME
+-- String.fromInt model.position.x
+
+
 viewControls : Model -> Element Msg
 viewControls model =
     row
         [ width fill
         , height fill
-        , spacingXY 30 0
+        , spacingXY (floor model.config.windowSpacing) 0
         ]
         [ viewControlsLeft model
         , el
@@ -140,9 +145,9 @@ viewControlsRight model =
 --                 "None"
 -- in
 -- [ Svg.svg
---     [ SvgAttrs.width <| String.fromInt model.config.boxWidth
---     , SvgAttrs.height <| String.fromInt model.config.boxHeight
---     , SvgAttrs.viewBox model.config.boxViewBox
+--     [ SvgAttrs.width <| String.fromInt model.config.windowWidth
+--     , SvgAttrs.height <| String.fromInt model.config.windowHeight
+--     , SvgAttrs.viewWindow model.config.windowviewWindow
 --     ]
 --     [ Svg.circle
 --         [ SvgAttrs.cx <| String.fromInt model.position.x
@@ -153,8 +158,8 @@ viewControlsRight model =
 --     , Svg.rect
 --         [ SvgAttrs.x "0"
 --         , SvgAttrs.y "0"
---         , SvgAttrs.width <| String.fromInt model.config.boxWidth
---         , SvgAttrs.height <| String.fromInt model.config.boxHeight
+--         , SvgAttrs.width <| String.fromInt model.config.windowWidth
+--         , SvgAttrs.height <| String.fromInt model.config.windowHeight
 --         , SvgAttrs.rx "10"
 --         , SvgAttrs.ry "10"
 --         ]

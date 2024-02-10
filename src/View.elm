@@ -10,7 +10,14 @@ import Model exposing (Model)
 
 view : Model -> Html Msg
 view model =
-    layout [ Background.color model.config.bodyBackgroundColor ] <| viewBox model
+    layout
+        [ width fill
+        , height fill
+        , Background.color model.config.bodyBackgroundColor
+        , Element.explain Debug.todo
+        ]
+    <|
+        viewBox model
 
 
 viewBox : Model -> Element Msg
@@ -73,7 +80,7 @@ viewControlsLeft model =
             [ Background.color model.config.controlsPressedBackgroundColor ]
         ]
         { onPress = Just (ButtonPressDirection Left)
-        , label = el [ centerX ] <| text "🡨"
+        , label = el [ centerX ] <| text "<"
         }
 
 
@@ -91,7 +98,7 @@ viewControlsRight model =
             [ Background.color model.config.controlsPressedBackgroundColor ]
         ]
         { onPress = Just (ButtonPressDirection Right)
-        , label = el [ centerX ] <| text "🡪"
+        , label = el [ centerX ] <| text ">"
         }
 
 

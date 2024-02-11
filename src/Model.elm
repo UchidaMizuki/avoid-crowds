@@ -1,33 +1,38 @@
 module Model exposing (..)
 
-import Element exposing (Color)
-import Messages exposing (Direction)
-import Element exposing (spacing)
+import Element.Font as Font
 
 
 type alias Model =
     { position : Position
-    , direction : Direction
+    , velocity : Float
     , config : Config
     }
 
 
 type alias Position =
-    { x : Int
-    , y : Int
+    { x : Float
+    , y : Float
     }
 
 
 type alias Config =
-    { bodyBackgroundColor : Color
-    , windowSize : Size
-    , windowSpacing : Float
+    { acceleration : Float
+    , friction : Float
+    , bodyBackgroundColor : Color
     , mainSize : Size
     , mainBackgroundColor : Color
-    , controlsActiveBackgroundColor : Color
-    , controlsPressedBackgroundColor : Color
+    , fontFamily : Font.Font
+    , fontSize : Float
     }
 
+
+type alias Color =
+    { red : Int
+    , green : Int
+    , blue : Int
+    , alpha : Float
+    }
 
 type alias Size =
     { width : Float

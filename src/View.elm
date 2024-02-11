@@ -1,168 +1,73 @@
 module View exposing (..)
 
-import Element exposing (Element, alignRight, centerX, centerY, column, el, explain, fill, fillPortion, height, layout, padding, paddingXY, rgb255, row, spacing, spacingXY, text, width)
+import Circle2d
+import Element exposing (Element)
 import Element.Background as Background
-import Element.Input as Input
+import Element.Font as Font
+import Geometry.Svg as Svg
 import Html exposing (Html)
-import Messages exposing (Direction(..), Msg(..))
+import Messages exposing (Msg(..))
 import Model exposing (Model)
+import Pixels
+import Point2d
+import Svg exposing (Svg)
+import Svg.Attributes as Attributes
 
 
 view : Model -> Html Msg
 view model =
-    layout
-        [ width fill
-        , height fill
-        , Background.color model.config.bodyBackgroundColor
-        , Element.explain Debug.todo
+    Element.layout
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Background.color <| Element.fromRgb255 model.config.bodyBackgroundColor
+        , Font.family [ model.config.fontFamily ]
+        , Font.size <| floor model.config.fontSize
         ]
     <|
-        viewWindow model
-
-
-viewWindow : Model -> Element Msg
-viewWindow model =
-    column
-        [ width <| Element.px <| floor model.config.windowSize.width
-        , height <| Element.px <| floor model.config.windowSize.height
-        , centerX
-        , centerY
-        , spacingXY 0 (floor model.config.windowSpacing)
-        ]
-        [ viewMain model
-        , viewControls model
-        ]
+        viewMain model
 
 
 viewMain : Model -> Element Msg
 viewMain model =
-    el
-        [ width fill
-        , height <| Element.px <| floor model.config.mainSize.height
-        , Background.color model.config.mainBackgroundColor
-        , centerX
+    Element.el
+        [ Element.width <| Element.px <| floor model.config.mainSize.width
+        , Element.height <| Element.px <| floor model.config.mainSize.height
+        , Background.color <| Element.fromRgb255 model.config.mainBackgroundColor
+        , Element.centerX
         ]
     <|
-        text <|
-            String.fromInt model.position.x
+        Element.html <|
+            Svg.svg
+                [ Attributes.viewBox <|
+                    "0 0 "
+                        ++ (String.fromInt <| floor model.config.mainSize.width)
+                        ++ " "
+                        ++ (String.fromInt <| floor model.config.mainSize.height)
+                ]
+                [ viewPlayer model
+                ]
 
 
-
--- FIXME
--- String.fromInt model.position.x
-
-
-viewControls : Model -> Element Msg
-viewControls model =
-    row
-        [ width fill
-        , height fill
-        , spacingXY (floor model.config.windowSpacing) 0
+viewPlayer : Model -> Svg Msg
+viewPlayer model =
+    Svg.circle2d
+        [ Attributes.fill "orange"
+        , Attributes.stroke "blue"
+        , Attributes.strokeWidth "2"
         ]
-        [ viewControlsLeft model
-        , el
-            [ width <| fillPortion 4
-            , height fill
-            , Background.color model.config.controlsActiveBackgroundColor
-            ]
-          <|
-            text "TODO"
-        , viewControlsRight model
-        ]
-
-
-viewControlsLeft : Model -> Element Msg
-viewControlsLeft model =
-    Input.button
-        [ width <| fillPortion 3
-        , height fill
-        , if model.direction == Left then
-            Background.color model.config.controlsPressedBackgroundColor
-
-          else
-            Background.color model.config.controlsActiveBackgroundColor
-        , Element.mouseDown
-            [ Background.color model.config.controlsPressedBackgroundColor ]
-        ]
-        { onPress = Just (ButtonPressDirection Left)
-        , label = el [ centerX ] <| text "<"
-        }
-
-
-viewControlsRight : Model -> Element Msg
-viewControlsRight model =
-    Input.button
-        [ width <| fillPortion 3
-        , height fill
-        , if model.direction == Right then
-            Background.color model.config.controlsPressedBackgroundColor
-
-          else
-            Background.color model.config.controlsActiveBackgroundColor
-        , Element.mouseDown
-            [ Background.color model.config.controlsPressedBackgroundColor ]
-        ]
-        { onPress = Just (ButtonPressDirection Right)
-        , label = el [ centerX ] <| text ">"
-        }
+        (Circle2d.withRadius (Pixels.pixels 10)
+            (Point2d.pixels model.position.x model.position.y)
+        )
 
 
 
--- [ Background.color model.config.pageBackgroundColor
--- , width <| px 864
--- , height <| px 864
--- , centerX
--- , centerY
--- ]
--- myRowOfStuff : Element msg
--- myRowOfStuff =
---     row [ width fill, centerY, spacing 30 ]
---         [ myElement
---         , myElement
---         , el [ alignRight ] myElement
+-- lineSegment : Svg msg
+-- lineSegment =
+--     Svg.lineSegment2d
+--         [ Attributes.stroke "blue"
+--         , Attributes.strokeWidth "5"
 --         ]
--- myElement : Element msg
--- myElement =
---     el
---         [ Background.color (rgb255 240 0 245)
---         , Font.color (rgb255 255 255 255)
---         , Border.rounded 3
---         , padding 30
---         ]
---         (text "stylish!")
--- let
---     direction =
---         case model.direction of
---             Just Up ->
---                 "Up"
---             Just Down ->
---                 "Down"
---             Just Left ->
---                 "Left"
---             Just Right ->
---                 "Right"
---             Nothing ->
---                 "None"
--- in
--- [ Svg.svg
---     [ SvgAttrs.width <| String.fromInt model.config.windowWidth
---     , SvgAttrs.height <| String.fromInt model.config.windowHeight
---     , SvgAttrs.viewWindow model.config.windowviewWindow
---     ]
---     [ Svg.circle
---         [ SvgAttrs.cx <| String.fromInt model.position.x
---         , SvgAttrs.cy <| String.fromInt model.position.y
---         , SvgAttrs.r "50"
---         ]
---         []
---     , Svg.rect
---         [ SvgAttrs.x "0"
---         , SvgAttrs.y "0"
---         , SvgAttrs.width <| String.fromInt model.config.windowWidth
---         , SvgAttrs.height <| String.fromInt model.config.windowHeight
---         , SvgAttrs.rx "10"
---         , SvgAttrs.ry "10"
---         ]
---         []
---     ]
--- ]
+--         (LineSegment2d.from
+--             (Point2d.pixels 100 100)
+--             (Point2d.pixels 200 200)
+--         )

@@ -1,10 +1,10 @@
 module Init exposing (..)
 
 import Browser.Dom
-import Element exposing (px, rgb255)
-import Messages exposing (Direction(..), Msg(..))
+import Element.Font as Font
+import Messages exposing (Msg(..))
 import Model exposing (Config, Model)
-import Task exposing (Task)
+import Task
 
 
 init : () -> ( Model, Cmd Msg )
@@ -14,8 +14,8 @@ init _ =
 
 defaultModel : Model
 defaultModel =
-    { position = { x = 60, y = 60 }
-    , direction = Other
+    { position = { x = 1 / 2, y = 7 / 8 }
+    , velocity = 0
     , config = defaultConfig
     }
 
@@ -26,13 +26,17 @@ defaultModel =
 
 defaultConfig : Config
 defaultConfig =
-    { bodyBackgroundColor = rgb255 244 244 242
-    , windowSize = { width = 360, height = 840 }
-    , windowSpacing = 30
-    , mainSize = { width = 360, height = 720 }
-    , mainBackgroundColor = rgb255 232 232 232
-    , controlsActiveBackgroundColor = rgb255 232 232 232
-    , controlsPressedBackgroundColor = rgb255 187 191 202
+    { acceleration = 1 / 16
+    , friction = 1 / 64
+    , bodyBackgroundColor = { red = 232, green = 232, blue = 232, alpha = 1 }
+    , mainSize = { width = 1, height = 1 }
+    , mainBackgroundColor = { red = 244, green = 244, blue = 242, alpha = 1 }
+    , fontFamily =
+        Font.external
+            { name = "Poppins"
+            , url = "https://fonts.googleapis.com/css?family=Poppins"
+            }
+    , fontSize = 1 / 16
     }
 
 

@@ -3,9 +3,8 @@ module Messages exposing (..)
 
 type Msg
     = KeyDownDirection Direction
-    | KeyUpDirection Direction
-    | ButtonPressDirection Direction
     | ResizeWindow Float Float
+    | Tick Float
 
 
 type Direction

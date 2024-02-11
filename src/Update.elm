@@ -1,7 +1,6 @@
 module Update exposing (..)
 
-import Html.Attributes exposing (width)
-import Messages exposing (Direction(..), Msg(..))
+import Messages exposing (Msg(..))
 import Model exposing (Model)
 
 
@@ -11,120 +10,123 @@ update msg model =
         KeyDownDirection direction ->
             updateKeyDownDirection direction model
 
-        KeyUpDirection direction ->
-            updateKeyUpDirection direction model
-
-        ButtonPressDirection direction ->
-            updateButtonPressDirection direction model
-
         ResizeWindow width height ->
             updateResizeWindow width height model
 
+        Tick delta ->
+            updateTick delta model
 
-updateKeyDownDirection : Direction -> Model -> ( Model, Cmd Msg )
+
+updateKeyDownDirection : Messages.Direction -> Model -> ( Model, Cmd Msg )
 updateKeyDownDirection direction model =
     case direction of
-        Left ->
+        Messages.Left ->
             ( { model
-                | position = { x = model.position.x - 1, y = model.position.y }
-                , direction = Left
+                | velocity = model.velocity - model.config.acceleration
               }
             , Cmd.none
             )
 
-        Right ->
+        Messages.Right ->
             ( { model
-                | position = { x = model.position.x + 1, y = model.position.y }
-                , direction = Right
+                | velocity = model.velocity + model.config.acceleration
               }
             , Cmd.none
             )
 
-        Other ->
-            ( { model
-                | direction = Other
-              }
+        Messages.Other ->
+            ( model
             , Cmd.none
             )
-
-
-updateKeyUpDirection : Direction -> Model -> ( Model, Cmd Msg )
-updateKeyUpDirection direction model =
-    ( if direction == model.direction then
-        { model | direction = Other }
-
-      else
-        model
-    , Cmd.none
-    )
-
-
-updateButtonPressDirection : Direction -> Model -> ( Model, Cmd Msg )
-updateButtonPressDirection direction model =
-    case direction of
-        Left ->
-            ( { model | position = { x = model.position.x - 1, y = model.position.y } }
-            , Cmd.none
-            )
-
-        Right ->
-            ( { model | position = { x = model.position.x + 1, y = model.position.y } }
-            , Cmd.none
-            )
-
-        Other ->
-            ( model, Cmd.none )
 
 
 updateResizeWindow : Float -> Float -> Model -> ( Model, Cmd Msg )
-updateResizeWindow width height model =
+updateResizeWindow w h model =
     let
         ratio =
-            width / height
+            w / h
 
         config =
             model.config
 
-        -- windowSize
-        ratiowindowSize =
-            config.windowSize.width / config.windowSize.height
-
-        windowSizeWidth =
-            if ratio < ratiowindowSize then
-                width
-
-            else
-                height * ratiowindowSize
-
-        windowSizeHeight =
-            windowSizeWidth / ratiowindowSize
-
-        windowSize =
-            { width = windowSizeWidth, height = windowSizeHeight }
-        
-        windowSpacing =
-            config.windowSpacing * windowSizeWidth / config.windowSize.width
-
         -- mainSize
-        ratioMainSize =
+        ratiomainSize =
             config.mainSize.width / config.mainSize.height
 
         mainSizeWidth =
-            windowSizeWidth
+            if ratio < ratiomainSize then
+                w
+
+            else
+                h * ratiomainSize
+
+        ratioWidth =
+            mainSizeWidth / config.mainSize.width
 
         mainSizeHeight =
-            mainSizeWidth / ratioMainSize
+            config.mainSize.height * ratioWidth
 
         mainSize =
             { width = mainSizeWidth, height = mainSizeHeight }
+
+        -- position
+        position =
+            { x = model.position.x * ratioWidth
+            , y = model.position.y * ratioWidth
+            }
+
+        -- velocity
+        velocity =
+            model.velocity * ratioWidth
+
+        -- acceleration
+        acceleration =
+            config.acceleration * ratioWidth
+
+        -- friction
+        friction =
+            config.friction * ratioWidth
+
+        -- fontSize
+        fontSize =
+            config.fontSize * ratioWidth
     in
     ( { model
-        | config =
+        | position = position
+        , velocity = velocity
+        , config =
             { config
-                | windowSize = windowSize
-                , windowSpacing = windowSpacing
+                | acceleration = acceleration
+                , friction = friction
                 , mainSize = mainSize
+                , fontSize = fontSize
             }
+      }
+    , Cmd.none
+    )
+
+
+updateTick : Float -> Model -> ( Model, Cmd Msg )
+updateTick delta model =
+    let
+        position =
+            { x = model.position.x + model.velocity * delta / 1000
+            , y = model.position.y
+            }
+
+        velocity =
+            if model.velocity > model.config.friction then
+                model.velocity - model.config.friction
+
+            else if model.velocity < -model.config.friction then
+                model.velocity + model.config.friction
+
+            else
+                0
+    in
+    ( { model
+        | position = position
+        , velocity = velocity
       }
     , Cmd.none
     )

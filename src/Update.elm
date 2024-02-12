@@ -8,125 +8,161 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         KeyDownDirection direction ->
-            updateKeyDownDirection direction model
+            updateKeyDownDirection model direction
 
         ResizeWindow width height ->
-            updateResizeWindow width height model
+            updateResizeWindow model width height
 
         Tick delta ->
-            updateTick delta model
+            updateTick model delta
 
 
-updateKeyDownDirection : Messages.Direction -> Model -> ( Model, Cmd Msg )
-updateKeyDownDirection direction model =
+updateKeyDownDirection : Model -> Model.Direction -> ( Model, Cmd Msg )
+updateKeyDownDirection model direction =
+    let
+        player =
+            model.player
+
+        velocity =
+            player.velocity
+
+        move =
+            player.move
+    in
     case direction of
-        Messages.Left ->
+        Model.Left ->
             ( { model
-                | velocity = model.velocity - model.config.acceleration
+                | player =
+                    { player
+                        | velocity = { velocity | x = velocity.x - model.acceleration }
+                        , move = updateKeyDownDirectionMove model Model.Left move
+                    }
+                , moveDistance = model.distance
               }
             , Cmd.none
             )
 
-        Messages.Right ->
+        Model.Right ->
             ( { model
-                | velocity = model.velocity + model.config.acceleration
+                | player =
+                    { player
+                        | velocity = { velocity | x = velocity.x + model.acceleration }
+                        , move = updateKeyDownDirectionMove model Model.Right move
+                    }
+                , moveDistance = model.distance
               }
             , Cmd.none
             )
 
-        Messages.Other ->
+        Model.Other ->
             ( model
             , Cmd.none
             )
 
 
-updateResizeWindow : Float -> Float -> Model -> ( Model, Cmd Msg )
-updateResizeWindow w h model =
-    let
-        ratio =
-            w / h
+updateKeyDownDirectionMove : Model -> Model.Direction -> List Model.Move -> List Model.Move
+updateKeyDownDirectionMove model direction move =
+    List.take model.moveLengthMax <|
+        { distanceDelta = model.distance - model.moveDistance, direction = direction } :: move
 
+
+updateResizeWindow : Model -> Float -> Float -> ( Model, Cmd Msg )
+updateResizeWindow model w h =
+    let
         config =
             model.config
 
-        -- mainSize
-        ratiomainSize =
-            config.mainSize.width / config.mainSize.height
-
-        mainSizeWidth =
-            if ratio < ratiomainSize then
-                w
+        zoom =
+            if w / h < config.size.width / config.size.height then
+                w / config.size.width
 
             else
-                h * ratiomainSize
-
-        ratioWidth =
-            mainSizeWidth / config.mainSize.width
-
-        mainSizeHeight =
-            config.mainSize.height * ratioWidth
-
-        mainSize =
-            { width = mainSizeWidth, height = mainSizeHeight }
-
-        -- position
-        position =
-            { x = model.position.x * ratioWidth
-            , y = model.position.y * ratioWidth
-            }
-
-        -- velocity
-        velocity =
-            model.velocity * ratioWidth
-
-        -- acceleration
-        acceleration =
-            config.acceleration * ratioWidth
-
-        -- friction
-        friction =
-            config.friction * ratioWidth
-
-        -- fontSize
-        fontSize =
-            config.fontSize * ratioWidth
+                h / config.size.height
     in
     ( { model
-        | position = position
-        , velocity = velocity
-        , config =
+        | config =
             { config
-                | acceleration = acceleration
-                , friction = friction
-                , mainSize = mainSize
-                , fontSize = fontSize
+                | zoom = zoom
             }
       }
     , Cmd.none
     )
 
 
-updateTick : Float -> Model -> ( Model, Cmd Msg )
-updateTick delta model =
+updateTick : Model -> Float -> ( Model, Cmd Msg )
+updateTick model delta =
     let
+        player =
+            model.player
+
         position =
-            { x = model.position.x + model.velocity * delta / 1000
-            , y = model.position.y
-            }
+            player.position
 
         velocity =
-            if model.velocity > model.config.friction then
-                model.velocity - model.config.friction
+            player.velocity
 
-            else if model.velocity < -model.config.friction then
-                model.velocity + model.config.friction
+        distance =
+            updateTickDistance model delta
 
-            else
-                0
+        positionX =
+            updateTickPositionX model delta
+
+        velocityX =
+            updateTickVelocityX model positionX
     in
     ( { model
-        | position = position
-        , velocity = velocity
+        | distance = distance
+        , player =
+            { player
+                | position = { position | x = positionX }
+                , velocity = { velocity | x = velocityX }
+            }
       }
     , Cmd.none
     )
+
+
+updateTickDistance : Model -> Float -> Float
+updateTickDistance model delta =
+    model.distance + model.player.velocity.y * delta / 1000
+
+
+updateTickPositionX : Model -> Float -> Float
+updateTickPositionX model delta =
+    let
+        positionX =
+            model.player.position.x + model.player.velocity.x * delta / 1000
+    in
+    if positionX < positionXMin model then
+        positionXMin model
+
+    else if positionX > positionXMax model then
+        positionXMax model
+
+    else
+        positionX
+
+
+updateTickVelocityX : Model -> Float -> Float
+updateTickVelocityX model positionX =
+    if positionX == positionXMin model || positionX == positionXMax model then
+        0
+
+    else if model.player.velocity.x > model.friction then
+        model.player.velocity.x - model.friction
+
+    else if model.player.velocity.x < -model.friction then
+        model.player.velocity.x + model.friction
+
+    else
+        0
+
+
+positionXMin : Model -> Float
+positionXMin model =
+    model.config.playerRadius
+
+
+positionXMax : Model -> Float
+positionXMax model =
+    model.config.gameSize.width - model.config.playerRadius

@@ -5220,19 +5220,36 @@ var $mdgriffith$elm_ui$Element$Font$external = function (_v0) {
 	return A2($mdgriffith$elm_ui$Internal$Model$ImportFont, name, url);
 };
 var $author$project$Init$defaultConfig = {
-	acceleration: 1 / 16,
-	bodyBackgroundColor: {alpha: 1, blue: 232, green: 232, red: 232},
+	backgroundColor: {alpha: 1, blue: 232, green: 232, red: 232},
+	fontColor: {alpha: 1, blue: 242, green: 244, red: 244},
 	fontFamily: $mdgriffith$elm_ui$Element$Font$external(
 		{name: 'Poppins', url: 'https://fonts.googleapis.com/css?family=Poppins'}),
-	fontSize: 1 / 16,
-	friction: 1 / 64,
-	mainBackgroundColor: {alpha: 1, blue: 242, green: 244, red: 244},
-	mainSize: {height: 1, width: 1}
+	fontSize: 0.675,
+	gameBackgroundColor: {alpha: 1, blue: 242, green: 244, red: 244},
+	gameSize: {height: 10, width: 10},
+	groundDashedColor: {alpha: 1, blue: 232, green: 232, red: 232},
+	groundDashedLength: 2,
+	groundDashedWidth: 0.125,
+	headerBackgroundColor: {alpha: 1, blue: 100, green: 84, red: 73},
+	padding: 0.25,
+	playerFillColor: {alpha: 1, blue: 100, green: 84, red: 73},
+	playerRadius: 0.25,
+	size: {height: 11.25, width: 10},
+	zoom: 1
 };
 var $author$project$Init$defaultModel = {
+	acceleration: 2,
 	config: $author$project$Init$defaultConfig,
-	position: {x: 1 / 2, y: 7 / 8},
-	velocity: 0
+	distance: 0,
+	friction: 0.5,
+	moveDistance: 0,
+	moveLengthMax: 1000,
+	opponents: _List_Nil,
+	player: {
+		move: _List_Nil,
+		position: {x: 5, y: 8.75},
+		velocity: {x: 0, y: 1}
+	}
 };
 var $author$project$Messages$ResizeWindow = F2(
 	function (a, b) {
@@ -5265,17 +5282,17 @@ var $author$project$Messages$Tick = function (a) {
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Messages$Left = {$: 'Left'};
-var $author$project$Messages$Other = {$: 'Other'};
-var $author$project$Messages$Right = {$: 'Right'};
+var $author$project$Model$Left = {$: 'Left'};
+var $author$project$Model$Other = {$: 'Other'};
+var $author$project$Model$Right = {$: 'Right'};
 var $author$project$Subscriptions$toDirection = function (key) {
 	switch (key) {
 		case 'ArrowLeft':
-			return $author$project$Messages$Left;
+			return $author$project$Model$Left;
 		case 'ArrowRight':
-			return $author$project$Messages$Right;
+			return $author$project$Model$Right;
 		default:
-			return $author$project$Messages$Other;
+			return $author$project$Model$Other;
 	}
 };
 var $author$project$Subscriptions$keyDecoder = A2(
@@ -5847,62 +5864,252 @@ var $author$project$Subscriptions$subscriptions = function (_v0) {
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $author$project$Update$updateKeyDownDirectionMove = F3(
+	function (model, direction, move) {
+		return A2(
+			$elm$core$List$take,
+			model.moveLengthMax,
+			A2(
+				$elm$core$List$cons,
+				{direction: direction, distanceDelta: model.distance - model.moveDistance},
+				move));
+	});
 var $author$project$Update$updateKeyDownDirection = F2(
-	function (direction, model) {
+	function (model, direction) {
+		var player = model.player;
+		var velocity = player.velocity;
+		var move = player.move;
 		switch (direction.$) {
 			case 'Left':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{velocity: model.velocity - model.config.acceleration}),
+						{
+							moveDistance: model.distance,
+							player: _Utils_update(
+								player,
+								{
+									move: A3($author$project$Update$updateKeyDownDirectionMove, model, $author$project$Model$Left, move),
+									velocity: _Utils_update(
+										velocity,
+										{x: velocity.x - model.acceleration})
+								})
+						}),
 					$elm$core$Platform$Cmd$none);
 			case 'Right':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{velocity: model.velocity + model.config.acceleration}),
+						{
+							moveDistance: model.distance,
+							player: _Utils_update(
+								player,
+								{
+									move: A3($author$project$Update$updateKeyDownDirectionMove, model, $author$project$Model$Right, move),
+									velocity: _Utils_update(
+										velocity,
+										{x: velocity.x + model.acceleration})
+								})
+						}),
 					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Update$updateResizeWindow = F3(
-	function (w, h, model) {
-		var ratio = w / h;
+	function (model, w, h) {
 		var config = model.config;
-		var ratiomainSize = config.mainSize.width / config.mainSize.height;
-		var mainSizeWidth = (_Utils_cmp(ratio, ratiomainSize) < 0) ? w : (h * ratiomainSize);
-		var ratioWidth = mainSizeWidth / config.mainSize.width;
-		var fontSize = config.fontSize * ratioWidth;
-		var friction = config.friction * ratioWidth;
-		var mainSizeHeight = config.mainSize.height * ratioWidth;
-		var mainSize = {height: mainSizeHeight, width: mainSizeWidth};
-		var position = {x: model.position.x * ratioWidth, y: model.position.y * ratioWidth};
-		var velocity = model.velocity * ratioWidth;
-		var acceleration = config.acceleration * ratioWidth;
+		var zoom = (_Utils_cmp(w / h, config.size.width / config.size.height) < 0) ? (w / config.size.width) : (h / config.size.height);
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
 					config: _Utils_update(
 						config,
-						{acceleration: acceleration, fontSize: fontSize, friction: friction, mainSize: mainSize}),
-					position: position,
-					velocity: velocity
+						{zoom: zoom})
 				}),
 			$elm$core$Platform$Cmd$none);
+	});
+var $author$project$Update$updateTickDistance = F2(
+	function (model, delta) {
+		return model.distance + ((model.player.velocity.y * delta) / 1000);
+	});
+var $author$project$Update$positionXMax = function (model) {
+	return model.config.gameSize.width - model.config.playerRadius;
+};
+var $author$project$Update$positionXMin = function (model) {
+	return model.config.playerRadius;
+};
+var $author$project$Update$updateTickPositionX = F2(
+	function (model, delta) {
+		var positionX = model.player.position.x + ((model.player.velocity.x * delta) / 1000);
+		return (_Utils_cmp(
+			positionX,
+			$author$project$Update$positionXMin(model)) < 0) ? $author$project$Update$positionXMin(model) : ((_Utils_cmp(
+			positionX,
+			$author$project$Update$positionXMax(model)) > 0) ? $author$project$Update$positionXMax(model) : positionX);
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
+var $author$project$Update$updateTickVelocityX = F2(
+	function (model, positionX) {
+		return (_Utils_eq(
+			positionX,
+			$author$project$Update$positionXMin(model)) || _Utils_eq(
+			positionX,
+			$author$project$Update$positionXMax(model))) ? 0 : ((_Utils_cmp(model.player.velocity.x, model.friction) > 0) ? (model.player.velocity.x - model.friction) : ((_Utils_cmp(model.player.velocity.x, -model.friction) < 0) ? (model.player.velocity.x + model.friction) : 0));
+	});
 var $author$project$Update$updateTick = F2(
-	function (delta, model) {
-		var velocity = (_Utils_cmp(model.velocity, model.config.friction) > 0) ? (model.velocity - model.config.friction) : ((_Utils_cmp(model.velocity, -model.config.friction) < 0) ? (model.velocity + model.config.friction) : 0);
-		var position = {x: model.position.x + ((model.velocity * delta) / 1000), y: model.position.y};
+	function (model, delta) {
+		var positionX = A2($author$project$Update$updateTickPositionX, model, delta);
+		var velocityX = A2($author$project$Update$updateTickVelocityX, model, positionX);
+		var player = model.player;
+		var position = player.position;
+		var velocity = player.velocity;
+		var distance = A2($author$project$Update$updateTickDistance, model, delta);
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
-				{position: position, velocity: velocity}),
+				{
+					distance: distance,
+					player: _Utils_update(
+						player,
+						{
+							position: _Utils_update(
+								position,
+								{x: positionX}),
+							velocity: _Utils_update(
+								velocity,
+								{x: velocityX})
+						})
+				}),
 			$elm$core$Platform$Cmd$none);
 	});
 var $author$project$Update$update = F2(
@@ -5910,16 +6117,26 @@ var $author$project$Update$update = F2(
 		switch (msg.$) {
 			case 'KeyDownDirection':
 				var direction = msg.a;
-				return A2($author$project$Update$updateKeyDownDirection, direction, model);
+				return A2($author$project$Update$updateKeyDownDirection, model, direction);
 			case 'ResizeWindow':
 				var width = msg.a;
 				var height = msg.b;
-				return A3($author$project$Update$updateResizeWindow, width, height, model);
+				return A3($author$project$Update$updateResizeWindow, model, width, height);
 			default:
 				var delta = msg.a;
-				return A2($author$project$Update$updateTick, delta, model);
+				return A2($author$project$Update$updateTick, model, delta);
 		}
 	});
+var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
+	return {$: 'AlignX', a: a};
+};
+var $mdgriffith$elm_ui$Internal$Model$CenterX = {$: 'CenterX'};
+var $mdgriffith$elm_ui$Element$centerX = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$CenterX);
+var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
+	return {$: 'AlignY', a: a};
+};
+var $mdgriffith$elm_ui$Internal$Model$CenterY = {$: 'CenterY'};
+var $mdgriffith$elm_ui$Element$centerY = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$CenterY);
 var $mdgriffith$elm_ui$Internal$Model$Colored = F3(
 	function (a, b, c) {
 		return {$: 'Colored', a: a, b: b, c: c};
@@ -5961,104 +6178,23 @@ var $mdgriffith$elm_ui$Element$Background$color = function (clr) {
 			'background-color',
 			clr));
 };
-var $mdgriffith$elm_ui$Internal$Model$FontFamily = F2(
-	function (a, b) {
-		return {$: 'FontFamily', a: a, b: b};
-	});
-var $mdgriffith$elm_ui$Internal$Flag$fontFamily = $mdgriffith$elm_ui$Internal$Flag$flag(5);
-var $elm$core$String$toLower = _String_toLower;
-var $elm$core$String$words = _String_words;
-var $mdgriffith$elm_ui$Internal$Model$renderFontClassName = F2(
-	function (font, current) {
-		return _Utils_ap(
-			current,
-			function () {
-				switch (font.$) {
-					case 'Serif':
-						return 'serif';
-					case 'SansSerif':
-						return 'sans-serif';
-					case 'Monospace':
-						return 'monospace';
-					case 'Typeface':
-						var name = font.a;
-						return A2(
-							$elm$core$String$join,
-							'-',
-							$elm$core$String$words(
-								$elm$core$String$toLower(name)));
-					case 'ImportFont':
-						var name = font.a;
-						var url = font.b;
-						return A2(
-							$elm$core$String$join,
-							'-',
-							$elm$core$String$words(
-								$elm$core$String$toLower(name)));
-					default:
-						var name = font.a.name;
-						return A2(
-							$elm$core$String$join,
-							'-',
-							$elm$core$String$words(
-								$elm$core$String$toLower(name)));
-				}
-			}());
-	});
-var $mdgriffith$elm_ui$Element$Font$family = function (families) {
+var $mdgriffith$elm_ui$Internal$Flag$fontColor = $mdgriffith$elm_ui$Internal$Flag$flag(14);
+var $mdgriffith$elm_ui$Element$Font$color = function (fontColor) {
 	return A2(
 		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$fontFamily,
-		A2(
-			$mdgriffith$elm_ui$Internal$Model$FontFamily,
-			A3($elm$core$List$foldl, $mdgriffith$elm_ui$Internal$Model$renderFontClassName, 'ff-', families),
-			families));
+		$mdgriffith$elm_ui$Internal$Flag$fontColor,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Colored,
+			'fc-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(fontColor),
+			'color',
+			fontColor));
 };
-var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
-	return {$: 'Fill', a: a};
-};
-var $mdgriffith$elm_ui$Element$fill = $mdgriffith$elm_ui$Internal$Model$Fill(1);
-var $mdgriffith$elm_ui$Internal$Model$Rgba = F4(
-	function (a, b, c, d) {
-		return {$: 'Rgba', a: a, b: b, c: c, d: d};
-	});
-var $mdgriffith$elm_ui$Element$fromRgb255 = function (clr) {
-	return A4($mdgriffith$elm_ui$Internal$Model$Rgba, clr.red / 255, clr.green / 255, clr.blue / 255, clr.alpha);
-};
-var $mdgriffith$elm_ui$Internal$Model$Height = function (a) {
-	return {$: 'Height', a: a};
-};
-var $mdgriffith$elm_ui$Element$height = $mdgriffith$elm_ui$Internal$Model$Height;
-var $mdgriffith$elm_ui$Internal$Style$classes = {above: 'a', active: 'atv', alignBottom: 'ab', alignCenterX: 'cx', alignCenterY: 'cy', alignContainerBottom: 'acb', alignContainerCenterX: 'accx', alignContainerCenterY: 'accy', alignContainerRight: 'acr', alignLeft: 'al', alignRight: 'ar', alignTop: 'at', alignedHorizontally: 'ah', alignedVertically: 'av', any: 's', behind: 'bh', below: 'b', bold: 'w7', borderDashed: 'bd', borderDotted: 'bdt', borderNone: 'bn', borderSolid: 'bs', capturePointerEvents: 'cpe', clip: 'cp', clipX: 'cpx', clipY: 'cpy', column: 'c', container: 'ctr', contentBottom: 'cb', contentCenterX: 'ccx', contentCenterY: 'ccy', contentLeft: 'cl', contentRight: 'cr', contentTop: 'ct', cursorPointer: 'cptr', cursorText: 'ctxt', focus: 'fcs', focusedWithin: 'focus-within', fullSize: 'fs', grid: 'g', hasBehind: 'hbh', heightContent: 'hc', heightExact: 'he', heightFill: 'hf', heightFillPortion: 'hfp', hover: 'hv', imageContainer: 'ic', inFront: 'fr', inputLabel: 'lbl', inputMultiline: 'iml', inputMultilineFiller: 'imlf', inputMultilineParent: 'imlp', inputMultilineWrapper: 'implw', inputText: 'it', italic: 'i', link: 'lnk', nearby: 'nb', noTextSelection: 'notxt', onLeft: 'ol', onRight: 'or', opaque: 'oq', overflowHidden: 'oh', page: 'pg', paragraph: 'p', passPointerEvents: 'ppe', root: 'ui', row: 'r', scrollbars: 'sb', scrollbarsX: 'sbx', scrollbarsY: 'sby', seButton: 'sbt', single: 'e', sizeByCapital: 'cap', spaceEvenly: 'sev', strike: 'sk', text: 't', textCenter: 'tc', textExtraBold: 'w8', textExtraLight: 'w2', textHeavy: 'w9', textJustify: 'tj', textJustifyAll: 'tja', textLeft: 'tl', textLight: 'w3', textMedium: 'w5', textNormalWeight: 'w4', textRight: 'tr', textSemiBold: 'w6', textThin: 'w1', textUnitalicized: 'tun', transition: 'ts', transparent: 'clr', underline: 'u', widthContent: 'wc', widthExact: 'we', widthFill: 'wf', widthFillPortion: 'wfp', wrapped: 'wrp'};
-var $mdgriffith$elm_ui$Internal$Model$Attr = function (a) {
-	return {$: 'Attr', a: a};
-};
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $mdgriffith$elm_ui$Internal$Model$htmlClass = function (cls) {
-	return $mdgriffith$elm_ui$Internal$Model$Attr(
-		$elm$html$Html$Attributes$class(cls));
-};
-var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
-	function (a, b) {
-		return {$: 'OnlyDynamic', a: a, b: b};
-	});
-var $mdgriffith$elm_ui$Internal$Model$StaticRootAndDynamic = F2(
-	function (a, b) {
-		return {$: 'StaticRootAndDynamic', a: a, b: b};
-	});
 var $mdgriffith$elm_ui$Internal$Model$Unkeyed = function (a) {
 	return {$: 'Unkeyed', a: a};
 };
-var $mdgriffith$elm_ui$Internal$Model$AsEl = {$: 'AsEl'};
-var $mdgriffith$elm_ui$Internal$Model$asEl = $mdgriffith$elm_ui$Internal$Model$AsEl;
+var $mdgriffith$elm_ui$Internal$Model$AsColumn = {$: 'AsColumn'};
+var $mdgriffith$elm_ui$Internal$Model$asColumn = $mdgriffith$elm_ui$Internal$Model$AsColumn;
+var $mdgriffith$elm_ui$Internal$Style$classes = {above: 'a', active: 'atv', alignBottom: 'ab', alignCenterX: 'cx', alignCenterY: 'cy', alignContainerBottom: 'acb', alignContainerCenterX: 'accx', alignContainerCenterY: 'accy', alignContainerRight: 'acr', alignLeft: 'al', alignRight: 'ar', alignTop: 'at', alignedHorizontally: 'ah', alignedVertically: 'av', any: 's', behind: 'bh', below: 'b', bold: 'w7', borderDashed: 'bd', borderDotted: 'bdt', borderNone: 'bn', borderSolid: 'bs', capturePointerEvents: 'cpe', clip: 'cp', clipX: 'cpx', clipY: 'cpy', column: 'c', container: 'ctr', contentBottom: 'cb', contentCenterX: 'ccx', contentCenterY: 'ccy', contentLeft: 'cl', contentRight: 'cr', contentTop: 'ct', cursorPointer: 'cptr', cursorText: 'ctxt', focus: 'fcs', focusedWithin: 'focus-within', fullSize: 'fs', grid: 'g', hasBehind: 'hbh', heightContent: 'hc', heightExact: 'he', heightFill: 'hf', heightFillPortion: 'hfp', hover: 'hv', imageContainer: 'ic', inFront: 'fr', inputLabel: 'lbl', inputMultiline: 'iml', inputMultilineFiller: 'imlf', inputMultilineParent: 'imlp', inputMultilineWrapper: 'implw', inputText: 'it', italic: 'i', link: 'lnk', nearby: 'nb', noTextSelection: 'notxt', onLeft: 'ol', onRight: 'or', opaque: 'oq', overflowHidden: 'oh', page: 'pg', paragraph: 'p', passPointerEvents: 'ppe', root: 'ui', row: 'r', scrollbars: 'sb', scrollbarsX: 'sbx', scrollbarsY: 'sby', seButton: 'sbt', single: 'e', sizeByCapital: 'cap', spaceEvenly: 'sev', strike: 'sk', text: 't', textCenter: 'tc', textExtraBold: 'w8', textExtraLight: 'w2', textHeavy: 'w9', textJustify: 'tj', textJustifyAll: 'tja', textLeft: 'tl', textLight: 'w3', textMedium: 'w5', textNormalWeight: 'w4', textRight: 'tr', textSemiBold: 'w6', textThin: 'w1', textUnitalicized: 'tun', transition: 'ts', transparent: 'clr', underline: 'u', widthContent: 'wc', widthExact: 'we', widthFill: 'wf', widthFillPortion: 'wfp', wrapped: 'wrp'};
 var $mdgriffith$elm_ui$Internal$Model$Generic = {$: 'Generic'};
 var $mdgriffith$elm_ui$Internal$Model$div = $mdgriffith$elm_ui$Internal$Model$Generic;
 var $mdgriffith$elm_ui$Internal$Model$NoNearbyChildren = {$: 'NoNearbyChildren'};
@@ -6158,12 +6294,23 @@ var $mdgriffith$elm_ui$Internal$Model$addKeyedChildren = F3(
 							inFront)));
 		}
 	});
+var $mdgriffith$elm_ui$Internal$Model$AsEl = {$: 'AsEl'};
+var $mdgriffith$elm_ui$Internal$Model$asEl = $mdgriffith$elm_ui$Internal$Model$AsEl;
 var $mdgriffith$elm_ui$Internal$Model$AsParagraph = {$: 'AsParagraph'};
 var $mdgriffith$elm_ui$Internal$Model$asParagraph = $mdgriffith$elm_ui$Internal$Model$AsParagraph;
 var $mdgriffith$elm_ui$Internal$Flag$alignBottom = $mdgriffith$elm_ui$Internal$Flag$flag(41);
 var $mdgriffith$elm_ui$Internal$Flag$alignRight = $mdgriffith$elm_ui$Internal$Flag$flag(40);
 var $mdgriffith$elm_ui$Internal$Flag$centerX = $mdgriffith$elm_ui$Internal$Flag$flag(42);
 var $mdgriffith$elm_ui$Internal$Flag$centerY = $mdgriffith$elm_ui$Internal$Flag$flag(43);
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$core$Set$Set_elm_builtin = function (a) {
 	return {$: 'Set_elm_builtin', a: a};
@@ -11507,6 +11654,113 @@ var $mdgriffith$elm_ui$Internal$Model$element = F4(
 				$mdgriffith$elm_ui$Internal$Model$NoNearbyChildren,
 				$elm$core$List$reverse(attributes)));
 	});
+var $mdgriffith$elm_ui$Internal$Model$Height = function (a) {
+	return {$: 'Height', a: a};
+};
+var $mdgriffith$elm_ui$Element$height = $mdgriffith$elm_ui$Internal$Model$Height;
+var $mdgriffith$elm_ui$Internal$Model$Attr = function (a) {
+	return {$: 'Attr', a: a};
+};
+var $mdgriffith$elm_ui$Internal$Model$htmlClass = function (cls) {
+	return $mdgriffith$elm_ui$Internal$Model$Attr(
+		$elm$html$Html$Attributes$class(cls));
+};
+var $mdgriffith$elm_ui$Internal$Model$Content = {$: 'Content'};
+var $mdgriffith$elm_ui$Element$shrink = $mdgriffith$elm_ui$Internal$Model$Content;
+var $mdgriffith$elm_ui$Internal$Model$Width = function (a) {
+	return {$: 'Width', a: a};
+};
+var $mdgriffith$elm_ui$Element$width = $mdgriffith$elm_ui$Internal$Model$Width;
+var $mdgriffith$elm_ui$Element$column = F2(
+	function (attrs, children) {
+		return A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asColumn,
+			$mdgriffith$elm_ui$Internal$Model$div,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentTop + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.contentLeft)),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
+						attrs))),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
+	});
+var $mdgriffith$elm_ui$Internal$Model$FontFamily = F2(
+	function (a, b) {
+		return {$: 'FontFamily', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$fontFamily = $mdgriffith$elm_ui$Internal$Flag$flag(5);
+var $elm$core$String$toLower = _String_toLower;
+var $elm$core$String$words = _String_words;
+var $mdgriffith$elm_ui$Internal$Model$renderFontClassName = F2(
+	function (font, current) {
+		return _Utils_ap(
+			current,
+			function () {
+				switch (font.$) {
+					case 'Serif':
+						return 'serif';
+					case 'SansSerif':
+						return 'sans-serif';
+					case 'Monospace':
+						return 'monospace';
+					case 'Typeface':
+						var name = font.a;
+						return A2(
+							$elm$core$String$join,
+							'-',
+							$elm$core$String$words(
+								$elm$core$String$toLower(name)));
+					case 'ImportFont':
+						var name = font.a;
+						var url = font.b;
+						return A2(
+							$elm$core$String$join,
+							'-',
+							$elm$core$String$words(
+								$elm$core$String$toLower(name)));
+					default:
+						var name = font.a.name;
+						return A2(
+							$elm$core$String$join,
+							'-',
+							$elm$core$String$words(
+								$elm$core$String$toLower(name)));
+				}
+			}());
+	});
+var $mdgriffith$elm_ui$Element$Font$family = function (families) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$fontFamily,
+		A2(
+			$mdgriffith$elm_ui$Internal$Model$FontFamily,
+			A3($elm$core$List$foldl, $mdgriffith$elm_ui$Internal$Model$renderFontClassName, 'ff-', families),
+			families));
+};
+var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
+	return {$: 'Fill', a: a};
+};
+var $mdgriffith$elm_ui$Element$fill = $mdgriffith$elm_ui$Internal$Model$Fill(1);
+var $mdgriffith$elm_ui$Internal$Model$Rgba = F4(
+	function (a, b, c, d) {
+		return {$: 'Rgba', a: a, b: b, c: c, d: d};
+	});
+var $mdgriffith$elm_ui$Element$fromRgb255 = function (clr) {
+	return A4($mdgriffith$elm_ui$Internal$Model$Rgba, clr.red / 255, clr.green / 255, clr.blue / 255, clr.alpha);
+};
+var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
+	function (a, b) {
+		return {$: 'OnlyDynamic', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Model$StaticRootAndDynamic = F2(
+	function (a, b) {
+		return {$: 'StaticRootAndDynamic', a: a, b: b};
+	});
 var $mdgriffith$elm_ui$Internal$Model$AllowHover = {$: 'AllowHover'};
 var $mdgriffith$elm_ui$Internal$Model$Layout = {$: 'Layout'};
 var $mdgriffith$elm_ui$Internal$Model$focusDefaultStyle = {
@@ -11650,7 +11904,6 @@ var $mdgriffith$elm_ui$Internal$Model$SansSerif = {$: 'SansSerif'};
 var $mdgriffith$elm_ui$Internal$Model$Typeface = function (a) {
 	return {$: 'Typeface', a: a};
 };
-var $mdgriffith$elm_ui$Internal$Flag$fontColor = $mdgriffith$elm_ui$Internal$Flag$flag(14);
 var $mdgriffith$elm_ui$Internal$Flag$fontSize = $mdgriffith$elm_ui$Internal$Flag$flag(4);
 var $mdgriffith$elm_ui$Internal$Model$rootStyle = function () {
 	var families = _List_fromArray(
@@ -11712,23 +11965,18 @@ var $mdgriffith$elm_ui$Element$layoutWith = F3(
 	});
 var $mdgriffith$elm_ui$Element$layout = $mdgriffith$elm_ui$Element$layoutWith(
 	{options: _List_Nil});
+var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
+	return {$: 'Px', a: a};
+};
+var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
 var $mdgriffith$elm_ui$Element$Font$size = function (i) {
 	return A2(
 		$mdgriffith$elm_ui$Internal$Model$StyleClass,
 		$mdgriffith$elm_ui$Internal$Flag$fontSize,
 		$mdgriffith$elm_ui$Internal$Model$FontSize(i));
 };
-var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
-	return {$: 'AlignX', a: a};
-};
-var $mdgriffith$elm_ui$Internal$Model$CenterX = {$: 'CenterX'};
-var $mdgriffith$elm_ui$Element$centerX = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$CenterX);
-var $mdgriffith$elm_ui$Internal$Model$Content = {$: 'Content'};
-var $mdgriffith$elm_ui$Element$shrink = $mdgriffith$elm_ui$Internal$Model$Content;
-var $mdgriffith$elm_ui$Internal$Model$Width = function (a) {
-	return {$: 'Width', a: a};
-};
-var $mdgriffith$elm_ui$Element$width = $mdgriffith$elm_ui$Internal$Model$Width;
+var $mdgriffith$elm_ui$Internal$Model$Bottom = {$: 'Bottom'};
+var $mdgriffith$elm_ui$Element$alignBottom = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Bottom);
 var $mdgriffith$elm_ui$Element$el = F2(
 	function (attrs, child) {
 		return A4(
@@ -11752,17 +12000,38 @@ var $elm$core$Basics$always = F2(
 	});
 var $mdgriffith$elm_ui$Internal$Model$unstyled = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Unstyled, $elm$core$Basics$always);
 var $mdgriffith$elm_ui$Element$html = $mdgriffith$elm_ui$Internal$Model$unstyled;
-var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
-	return {$: 'Px', a: a};
+var $elm$virtual_dom$VirtualDom$nodeNS = F2(
+	function (namespace, tag) {
+		return A2(
+			_VirtualDom_nodeNS,
+			namespace,
+			_VirtualDom_noScript(tag));
+	});
+var $elm_community$typed_svg$TypedSvg$Core$node = $elm$virtual_dom$VirtualDom$nodeNS('http://www.w3.org/2000/svg');
+var $elm_community$typed_svg$TypedSvg$svg = $elm_community$typed_svg$TypedSvg$Core$node('svg');
+var $elm_community$typed_svg$TypedSvg$Core$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm_community$typed_svg$TypedSvg$Attributes$viewBox = F4(
+	function (minX, minY, vWidth, vHeight) {
+		return A2(
+			$elm_community$typed_svg$TypedSvg$Core$attribute,
+			'viewBox',
+			A2(
+				$elm$core$String$join,
+				' ',
+				A2(
+					$elm$core$List$map,
+					$elm$core$String$fromFloat,
+					_List_fromArray(
+						[minX, minY, vWidth, vHeight]))));
+	});
+var $elm_community$typed_svg$TypedSvg$Types$Paint = function (a) {
+	return {$: 'Paint', a: a};
 };
-var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
-var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $ianmackenzie$elm_geometry$Circle2d$centerPoint = function (_v0) {
 	var properties = _v0.a;
 	return properties.centerPoint;
 };
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
@@ -11803,7 +12072,81 @@ var $ianmackenzie$elm_geometry_svg$Geometry$Svg$circle2d = F2(
 					A2($elm$core$List$cons, r, attributes))),
 			_List_Nil);
 	});
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $avh4$elm_color$Color$toCssString = function (_v0) {
+	var r = _v0.a;
+	var g = _v0.b;
+	var b = _v0.c;
+	var a = _v0.d;
+	var roundTo = function (x) {
+		return $elm$core$Basics$round(x * 1000) / 1000;
+	};
+	var pct = function (x) {
+		return $elm$core$Basics$round(x * 10000) / 100;
+	};
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'rgba(',
+				$elm$core$String$fromFloat(
+				pct(r)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(g)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(b)),
+				'%,',
+				$elm$core$String$fromFloat(
+				roundTo(a)),
+				')'
+			]));
+};
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString = function (paint) {
+	switch (paint.$) {
+		case 'Paint':
+			var color = paint.a;
+			return $avh4$elm_color$Color$toCssString(color);
+		case 'CSSVariable':
+			var string = paint.a;
+			return $elm$core$String$concat(
+				_List_fromArray(
+					['var(' + (string + ')')]));
+		case 'Reference':
+			var string = paint.a;
+			return $elm$core$String$concat(
+				_List_fromArray(
+					['url(#', string, ')']));
+		case 'ContextFill':
+			return 'context-fill';
+		case 'ContextStroke':
+			return 'context-stroke';
+		default:
+			return 'none';
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$fill = A2(
+	$elm$core$Basics$composeL,
+	$elm_community$typed_svg$TypedSvg$Core$attribute('fill'),
+	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$scaleFrom255 = function (c) {
+	return c / 255;
+};
+var $avh4$elm_color$Color$rgb255 = F3(
+	function (r, g, b) {
+		return A4(
+			$avh4$elm_color$Color$RgbaSpace,
+			$avh4$elm_color$Color$scaleFrom255(r),
+			$avh4$elm_color$Color$scaleFrom255(g),
+			$avh4$elm_color$Color$scaleFrom255(b),
+			1.0);
+	});
+var $author$project$Utils$fromRgb255 = function (color) {
+	return A3($avh4$elm_color$Color$rgb255, color.red, color.green, color.blue);
+};
 var $ianmackenzie$elm_units$Quantity$Quantity = function (a) {
 	return {$: 'Quantity', a: a};
 };
@@ -11818,8 +12161,6 @@ var $ianmackenzie$elm_geometry$Point2d$pixels = F2(
 		return $ianmackenzie$elm_geometry$Geometry$Types$Point2d(
 			{x: x, y: y});
 	});
-var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
-var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
 var $ianmackenzie$elm_geometry$Geometry$Types$Circle2d = function (a) {
 	return {$: 'Circle2d', a: a};
 };
@@ -11839,49 +12180,261 @@ var $ianmackenzie$elm_geometry$Circle2d$withRadius = F2(
 				radius: $ianmackenzie$elm_units$Quantity$abs(givenRadius)
 			});
 	});
-var $author$project$View$viewPlayer = function (model) {
+var $author$project$View$zoom = F2(
+	function (model, size) {
+		return $elm$core$Basics$floor(model.config.zoom * size);
+	});
+var $author$project$View$viewGamePlayer = function (model) {
 	return A2(
 		$ianmackenzie$elm_geometry_svg$Geometry$Svg$circle2d,
 		_List_fromArray(
 			[
-				$elm$svg$Svg$Attributes$fill('orange'),
-				$elm$svg$Svg$Attributes$stroke('blue'),
-				$elm$svg$Svg$Attributes$strokeWidth('2')
+				$elm_community$typed_svg$TypedSvg$Attributes$fill(
+				$elm_community$typed_svg$TypedSvg$Types$Paint(
+					$author$project$Utils$fromRgb255(model.config.playerFillColor)))
 			]),
 		A2(
 			$ianmackenzie$elm_geometry$Circle2d$withRadius,
-			$ianmackenzie$elm_units$Pixels$pixels(10),
-			A2($ianmackenzie$elm_geometry$Point2d$pixels, model.position.x, model.position.y)));
+			$ianmackenzie$elm_units$Pixels$pixels(
+				A2($author$project$View$zoom, model, model.config.playerRadius)),
+			A2(
+				$ianmackenzie$elm_geometry$Point2d$pixels,
+				A2($author$project$View$zoom, model, model.player.position.x),
+				A2($author$project$View$zoom, model, model.player.position.y))));
 };
-var $author$project$View$viewMain = function (model) {
+var $elm_community$typed_svg$TypedSvg$Types$Px = function (a) {
+	return {$: 'Px', a: a};
+};
+var $ianmackenzie$elm_geometry$Geometry$Types$LineSegment2d = function (a) {
+	return {$: 'LineSegment2d', a: a};
+};
+var $ianmackenzie$elm_geometry$LineSegment2d$fromEndpoints = $ianmackenzie$elm_geometry$Geometry$Types$LineSegment2d;
+var $ianmackenzie$elm_geometry$LineSegment2d$from = F2(
+	function (startPoint_, endPoint_) {
+		return $ianmackenzie$elm_geometry$LineSegment2d$fromEndpoints(
+			_Utils_Tuple2(startPoint_, endPoint_));
+	});
+var $ianmackenzie$elm_geometry$LineSegment2d$endpoints = function (_v0) {
+	var endpoints_ = _v0.a;
+	return endpoints_;
+};
+var $ianmackenzie$elm_geometry_svg$Geometry$Svg$coordinatesString = function (point) {
+	var _v0 = $ianmackenzie$elm_geometry$Point2d$unwrap(point);
+	var x = _v0.x;
+	var y = _v0.y;
+	return $elm$core$String$fromFloat(x) + (',' + $elm$core$String$fromFloat(y));
+};
+var $elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
+var $ianmackenzie$elm_geometry_svg$Geometry$Svg$pointsAttribute = function (points) {
+	return $elm$svg$Svg$Attributes$points(
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2($elm$core$List$map, $ianmackenzie$elm_geometry_svg$Geometry$Svg$coordinatesString, points)));
+};
+var $elm$svg$Svg$polyline = $elm$svg$Svg$trustedNode('polyline');
+var $ianmackenzie$elm_geometry_svg$Geometry$Svg$lineSegment2d = F2(
+	function (attributes, lineSegment) {
+		var _v0 = $ianmackenzie$elm_geometry$LineSegment2d$endpoints(lineSegment);
+		var p1 = _v0.a;
+		var p2 = _v0.b;
+		return A2(
+			$elm$svg$Svg$polyline,
+			A2(
+				$elm$core$List$cons,
+				$ianmackenzie$elm_geometry_svg$Geometry$Svg$pointsAttribute(
+					_List_fromArray(
+						[p1, p2])),
+				attributes),
+			_List_Nil);
+	});
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm_community$typed_svg$TypedSvg$Attributes$stroke = A2(
+	$elm$core$Basics$composeL,
+	$elm_community$typed_svg$TypedSvg$Core$attribute('stroke'),
+	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString = function (length) {
+	switch (length.$) {
+		case 'Cm':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'cm';
+		case 'Em':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'em';
+		case 'Ex':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'ex';
+		case 'In':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'in';
+		case 'Mm':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'mm';
+		case 'Num':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x);
+		case 'Pc':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'pc';
+		case 'Percent':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + '%';
+		case 'Pt':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'pt';
+		case 'Px':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'px';
+		default:
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'rem';
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'stroke-width',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $author$project$View$viewGround = function (model) {
+	var groundDashedLength = A2($author$project$View$zoom, model, model.config.groundDashedLength);
+	var gameSizeWidth = A2($author$project$View$zoom, model, model.config.gameSize.width);
+	var gameSizeHeight = A2($author$project$View$zoom, model, model.config.gameSize.height);
+	var groundDashedNumber = ((gameSizeHeight / groundDashedLength) | 0) + 1;
+	var distance = A2($author$project$View$zoom, model, model.distance);
+	var groundDashedStart = A2($elm$core$Basics$modBy, groundDashedLength, distance) - groundDashedLength;
+	return A2(
+		$elm$core$List$map,
+		function (i) {
+			var groundDashedStart_ = groundDashedStart + (groundDashedLength * (i - 1));
+			return A2(
+				$ianmackenzie$elm_geometry_svg$Geometry$Svg$lineSegment2d,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$stroke(
+						$elm_community$typed_svg$TypedSvg$Types$Paint(
+							$author$project$Utils$fromRgb255(model.config.groundDashedColor))),
+						$elm_community$typed_svg$TypedSvg$Attributes$strokeWidth(
+						$elm_community$typed_svg$TypedSvg$Types$Px(
+							A2($author$project$View$zoom, model, model.config.groundDashedWidth)))
+					]),
+				A2(
+					$ianmackenzie$elm_geometry$LineSegment2d$from,
+					A2($ianmackenzie$elm_geometry$Point2d$pixels, gameSizeWidth / 2, groundDashedStart_),
+					A2($ianmackenzie$elm_geometry$Point2d$pixels, gameSizeWidth / 2, groundDashedStart_ + (groundDashedLength / 2))));
+		},
+		A2($elm$core$List$range, 1, groundDashedNumber));
+};
+var $author$project$View$viewGame = function (model) {
+	var gameSizeWidth = A2($author$project$View$zoom, model, model.config.gameSize.width);
+	var gameSizeHeight = A2($author$project$View$zoom, model, model.config.gameSize.height);
+	return A2(
+		$mdgriffith$elm_ui$Element$el,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width(
+				$mdgriffith$elm_ui$Element$px(gameSizeWidth)),
+				$mdgriffith$elm_ui$Element$height(
+				$mdgriffith$elm_ui$Element$px(gameSizeHeight)),
+				$mdgriffith$elm_ui$Element$centerX,
+				$mdgriffith$elm_ui$Element$alignBottom,
+				$mdgriffith$elm_ui$Element$Background$color(
+				$mdgriffith$elm_ui$Element$fromRgb255(model.config.gameBackgroundColor))
+			]),
+		$mdgriffith$elm_ui$Element$html(
+			A2(
+				$elm_community$typed_svg$TypedSvg$svg,
+				_List_fromArray(
+					[
+						A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, gameSizeWidth, gameSizeHeight)
+					]),
+				_Utils_ap(
+					$author$project$View$viewGround(model),
+					_List_fromArray(
+						[
+							$author$project$View$viewGamePlayer(model)
+						])))));
+};
+var $mdgriffith$elm_ui$Internal$Model$Right = {$: 'Right'};
+var $mdgriffith$elm_ui$Element$alignRight = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Right);
+var $mdgriffith$elm_ui$Internal$Model$PaddingStyle = F5(
+	function (a, b, c, d, e) {
+		return {$: 'PaddingStyle', a: a, b: b, c: c, d: d, e: e};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$padding = $mdgriffith$elm_ui$Internal$Flag$flag(2);
+var $mdgriffith$elm_ui$Element$padding = function (x) {
+	var f = x;
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$padding,
+		A5(
+			$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+			'p-' + $elm$core$String$fromInt(x),
+			f,
+			f,
+			f,
+			f));
+};
+var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
+var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
+var $mdgriffith$elm_ui$Element$row = F2(
+	function (attrs, children) {
+		return A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asRow,
+			$mdgriffith$elm_ui$Internal$Model$div,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentLeft + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.contentCenterY)),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
+						attrs))),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
+	});
+var $mdgriffith$elm_ui$Internal$Model$Text = function (a) {
+	return {$: 'Text', a: a};
+};
+var $mdgriffith$elm_ui$Element$text = function (content) {
+	return $mdgriffith$elm_ui$Internal$Model$Text(content);
+};
+var $author$project$View$viewHeader = function (model) {
 	return A2(
 		$mdgriffith$elm_ui$Element$el,
 		_List_fromArray(
 			[
 				$mdgriffith$elm_ui$Element$width(
 				$mdgriffith$elm_ui$Element$px(
-					$elm$core$Basics$floor(model.config.mainSize.width))),
-				$mdgriffith$elm_ui$Element$height(
-				$mdgriffith$elm_ui$Element$px(
-					$elm$core$Basics$floor(model.config.mainSize.height))),
+					A2($author$project$View$zoom, model, model.config.gameSize.width))),
+				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$centerX,
+				$mdgriffith$elm_ui$Element$centerY,
 				$mdgriffith$elm_ui$Element$Background$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.config.mainBackgroundColor)),
-				$mdgriffith$elm_ui$Element$centerX
+				$mdgriffith$elm_ui$Element$fromRgb255(model.config.headerBackgroundColor))
 			]),
-		$mdgriffith$elm_ui$Element$html(
-			A2(
-				$elm$svg$Svg$svg,
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$viewBox(
-						'0 0 ' + ($elm$core$String$fromInt(
-							$elm$core$Basics$floor(model.config.mainSize.width)) + (' ' + $elm$core$String$fromInt(
-							$elm$core$Basics$floor(model.config.mainSize.height)))))
-					]),
-				_List_fromArray(
-					[
-						$author$project$View$viewPlayer(model)
-					]))));
+		A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerY,
+					$mdgriffith$elm_ui$Element$padding(
+					A2($author$project$View$zoom, model, model.config.padding))
+				]),
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$text('TODO: Title'),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$alignRight]),
+					$mdgriffith$elm_ui$Element$text(
+						$elm$core$String$fromInt(
+							$elm$core$Basics$floor(model.distance)) + ' m'))
+				])));
 };
 var $author$project$View$view = function (model) {
 	return A2(
@@ -11891,14 +12444,33 @@ var $author$project$View$view = function (model) {
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$Background$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.config.bodyBackgroundColor)),
+				$mdgriffith$elm_ui$Element$fromRgb255(model.config.backgroundColor)),
 				$mdgriffith$elm_ui$Element$Font$family(
 				_List_fromArray(
 					[model.config.fontFamily])),
 				$mdgriffith$elm_ui$Element$Font$size(
-				$elm$core$Basics$floor(model.config.fontSize))
+				A2($author$project$View$zoom, model, model.config.fontSize)),
+				$mdgriffith$elm_ui$Element$Font$color(
+				$mdgriffith$elm_ui$Element$fromRgb255(model.config.fontColor))
 			]),
-		$author$project$View$viewMain(model));
+		A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width(
+					$mdgriffith$elm_ui$Element$px(
+						A2($author$project$View$zoom, model, model.config.size.width))),
+					$mdgriffith$elm_ui$Element$height(
+					$mdgriffith$elm_ui$Element$px(
+						A2($author$project$View$zoom, model, model.config.size.height))),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$centerY
+				]),
+			_List_fromArray(
+				[
+					$author$project$View$viewHeader(model),
+					$author$project$View$viewGame(model)
+				])));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Init$init, subscriptions: $author$project$Subscriptions$subscriptions, update: $author$project$Update$update, view: $author$project$View$view});

@@ -11,23 +11,23 @@ subscriptions _ =
     Sub.batch
         [ Events.onKeyDown (Decode.map KeyDownDirection keyDecoder)
         , Events.onResize <| \width height -> ResizeWindow (toFloat width) (toFloat height)
-        , Events.onAnimationFrameDelta Tick 
+        , Events.onAnimationFrameDelta Tick
         ]
 
 
-keyDecoder : Decode.Decoder Messages.Direction
+keyDecoder : Decode.Decoder Model.Direction
 keyDecoder =
     Decode.map toDirection (Decode.field "key" Decode.string)
 
 
-toDirection : String -> Messages.Direction
+toDirection : String -> Model.Direction
 toDirection key =
     case key of
         "ArrowLeft" ->
-            Messages.Left
+            Model.Left
 
         "ArrowRight" ->
-            Messages.Right
+            Model.Right
 
         _ ->
-            Messages.Other
+            Model.Other

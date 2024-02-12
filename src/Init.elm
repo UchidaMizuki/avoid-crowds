@@ -3,7 +3,7 @@ module Init exposing (..)
 import Browser.Dom
 import Element.Font as Font
 import Messages exposing (Msg(..))
-import Model exposing (Config, Model)
+import Model exposing (Model)
 import Task
 
 
@@ -14,8 +14,17 @@ init _ =
 
 defaultModel : Model
 defaultModel =
-    { position = { x = 1 / 2, y = 7 / 8 }
-    , velocity = 0
+    { distance = 0
+    , player =
+        { position = { x = 5, y = 8.75 }
+        , velocity = { x = 0, y = 1 }
+        , move = []
+        }
+    , opponents = []
+    , acceleration = 2
+    , friction = 0.5
+    , moveDistance = 0
+    , moveLengthMax = 1000
     , config = defaultConfig
     }
 
@@ -24,19 +33,27 @@ defaultModel =
 -- https://colorhunt.co/palette/f4f4f2e8e8e8bbbfca495464
 
 
-defaultConfig : Config
+defaultConfig : Model.Config
 defaultConfig =
-    { acceleration = 1 / 16
-    , friction = 1 / 64
-    , bodyBackgroundColor = { red = 232, green = 232, blue = 232, alpha = 1 }
-    , mainSize = { width = 1, height = 1 }
-    , mainBackgroundColor = { red = 244, green = 244, blue = 242, alpha = 1 }
+    { backgroundColor = { red = 232, green = 232, blue = 232, alpha = 1 }
+    , size = { width = 10, height = 11.25 }
+    , zoom = 1
+    , padding = 0.25
     , fontFamily =
         Font.external
             { name = "Poppins"
             , url = "https://fonts.googleapis.com/css?family=Poppins"
             }
-    , fontSize = 1 / 16
+    , fontSize = 0.675
+    , fontColor = { red = 244, green = 244, blue = 242, alpha = 1 }
+    , headerBackgroundColor = { red = 73, green = 84, blue = 100, alpha = 1 }
+    , gameSize = { width = 10, height = 10 }
+    , gameBackgroundColor = { red = 244, green = 244, blue = 242, alpha = 1 }
+    , groundDashedLength = 2
+    , groundDashedWidth = 0.125
+    , groundDashedColor = { red = 232, green = 232, blue = 232, alpha = 1 } -- { red = 187, green = 191, blue = 202, alpha = 1 }
+    , playerRadius = 0.25
+    , playerFillColor = { red = 73, green = 84, blue = 100, alpha = 1 }
     }
 
 

@@ -4,9 +4,21 @@ import Element.Font as Font
 
 
 type alias Model =
-    { position : Position
-    , velocity : Float
+    { distance : Float
+    , player : Player
+    , opponents : List Player
+    , acceleration : Float
+    , friction : Float
+    , moveDistance : Float
+    , moveLengthMax : Int
     , config : Config
+    }
+
+
+type alias Player =
+    { position : Position
+    , velocity : Velocity
+    , move : List Move
     }
 
 
@@ -16,14 +28,38 @@ type alias Position =
     }
 
 
+type alias Velocity =
+    Position
+
+
+type alias Move =
+    { distanceDelta : Float
+    , direction : Direction
+    }
+
+
+type Direction
+    = Left
+    | Right
+    | Other
+
+
 type alias Config =
-    { acceleration : Float
-    , friction : Float
-    , bodyBackgroundColor : Color
-    , mainSize : Size
-    , mainBackgroundColor : Color
+    { backgroundColor : Color
+    , size : Size
+    , zoom : Float
+    , padding : Float
     , fontFamily : Font.Font
     , fontSize : Float
+    , fontColor : Color
+    , headerBackgroundColor : Color
+    , gameSize : Size
+    , gameBackgroundColor : Color
+    , groundDashedLength : Float
+    , groundDashedWidth : Float
+    , groundDashedColor : Color
+    , playerRadius : Float
+    , playerFillColor : Color
     }
 
 
@@ -33,6 +69,7 @@ type alias Color =
     , blue : Int
     , alpha : Float
     }
+
 
 type alias Size =
     { width : Float

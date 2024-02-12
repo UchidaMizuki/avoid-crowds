@@ -1,13 +1,8 @@
 module Messages exposing (..)
 
+import Model 
 
 type Msg
-    = KeyDownDirection Direction
+    = KeyDownDirection Model.Direction
     | ResizeWindow Float Float
     | Tick Float
-
-
-type Direction
-    = Left
-    | Right
-    | Other

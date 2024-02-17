@@ -1,39 +1,42 @@
 module Model exposing (..)
 
 import Element.Font as Font
+import Time
 
 
 type alias Model =
-    { distance : Float
+    { time : Time.Posix
     , player : Player
-    , opponents : List Player
+    , opponents : Opponents
     , acceleration : Float
     , friction : Float
-    , moveDistance : Float
-    , moveLengthMax : Int
-    , config : Config
+    , view : View
     }
 
 
 type alias Player =
-    { position : Position
-    , velocity : Velocity
-    , move : List Move
+    { movesLengthMax : Int
+    , agent : Agent
     }
 
 
-type alias Position =
+type alias Agent =
+    { time : Time.Posix
+    , radius : Float
+    , position : Vector
+    , velocity : Vector
+    , moves : List Move
+    }
+
+
+type alias Vector =
     { x : Float
     , y : Float
     }
 
 
-type alias Velocity =
-    Position
-
-
 type alias Move =
-    { distanceDelta : Float
+    { delta : Int
     , direction : Direction
     }
 
@@ -44,22 +47,33 @@ type Direction
     | Other
 
 
-type alias Config =
-    { backgroundColor : Color
-    , size : Size
-    , zoom : Float
-    , padding : Float
-    , fontFamily : Font.Font
-    , fontSize : Float
-    , fontColor : Color
+type alias Opponents =
+    { delta : Int
+    , deltaMin : Int
+    , rate : Float
+    , radius : Float
+    , movesLengthMax : Int
+    , agents : List Agent
+    }
+
+
+type alias View =
+    { zoom : Float
+    , bodyBackgroundColor : Color
+    , headerSize : Size
     , headerBackgroundColor : Color
+    , headerFontFamily : Font.Font
+    , headerFontColor : Color
+    , headerFontSize : Float
+    , headerPadding : Float
     , gameSize : Size
     , gameBackgroundColor : Color
-    , groundDashedLength : Float
-    , groundDashedWidth : Float
-    , groundDashedColor : Color
-    , playerRadius : Float
-    , playerFillColor : Color
+    , gameGroundDashedLength : Float
+    , gameGroundDashedWidth : Float
+    , gameGroundDashedColor : Color
+    , gamePlayerPositionY : Float
+    , gamePlayerFillColor : Color
+    , gameOpponentsFillColor : Color
     }
 
 

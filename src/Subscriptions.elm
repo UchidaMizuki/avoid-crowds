@@ -9,9 +9,9 @@ import Model exposing (Model)
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Events.onKeyDown (Decode.map KeyDownDirection keyDecoder)
-        , Events.onResize <| \width height -> ResizeWindow (toFloat width) (toFloat height)
-        , Events.onAnimationFrameDelta Tick
+        [ Events.onResize <| \width height -> Resize { width = toFloat width, height = toFloat height }
+        , Events.onAnimationFrame AnimationFrame
+        , Events.onKeyDown (Decode.map KeyDownDirection keyDecoder)
         ]
 
 

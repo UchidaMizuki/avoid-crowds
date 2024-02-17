@@ -1,20 +1,242 @@
 module Update exposing (..)
 
+import Html exposing (a)
+import Init
 import Messages exposing (Msg(..))
 import Model exposing (Model)
+import Random
+import Time
+import Utils
+import View exposing (view)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Now time ->
+            updateNow model time
+
+        Resize size ->
+            updateResize model size
+
+        OpponentsDelta delta ->
+            updateOpponentsDelta model delta
+
+        AnimationFrame time ->
+            updateAnimationFrame model time
+
         KeyDownDirection direction ->
             updateKeyDownDirection model direction
 
-        ResizeWindow width height ->
-            updateResizeWindow model width height
+        AddOpponent agent ->
+            updateAddOpponent model agent
 
-        Tick delta ->
-            updateTick model delta
+
+updateNow : Model -> Time.Posix -> ( Model, Cmd Msg )
+updateNow model time =
+    let
+        player =
+            model.player
+
+        agent =
+            player.agent
+    in
+    ( { model
+        | time = time
+        , player = { player | agent = { agent | time = time } }
+      }
+    , Cmd.none
+    )
+
+
+updateResize : Model -> Model.Size -> ( Model, Cmd Msg )
+updateResize model size =
+    let
+        view =
+            model.view
+
+        viewSize =
+            { width = view.headerSize.width + view.gameSize.width
+            , height = view.headerSize.height + view.gameSize.height
+            }
+
+        viewZoom =
+            if size.width / size.height < viewSize.width / viewSize.height then
+                size.width / viewSize.width
+
+            else
+                size.height / viewSize.height
+    in
+    ( { model | view = { view | zoom = viewZoom } }, Cmd.none )
+
+
+updateOpponentsDelta : Model -> Int -> ( Model, Cmd Msg )
+updateOpponentsDelta model delta =
+    let
+        opponents =
+            model.opponents
+    in
+    ( { model | opponents = { opponents | delta = delta } }, Cmd.none )
+
+
+updateAnimationFrame : Model -> Time.Posix -> ( Model, Cmd Msg )
+updateAnimationFrame model time =
+    let
+        delta =
+            Time.posixToMillis time - Time.posixToMillis model.time
+
+        player =
+            model.player
+
+        opponents =
+            updateAnimationFrameOpponents model model.opponents time delta
+    in
+    ( { model
+        | time = time
+        , player = { player | agent = updateAnimationFrameAgent model player.agent time delta }
+        , opponents = opponents
+      }
+    , addOpponent model time opponents.delta
+    )
+
+
+addOpponent : Model -> Time.Posix -> Int -> Cmd Msg
+addOpponent model time delta =
+    if delta < 0 then
+        let
+            player =
+                model.player
+
+            agent =
+                player.agent
+
+            moves =
+                agent.moves
+
+            opponents =
+                model.opponents
+
+            radius =
+                opponents.radius
+
+            generatorAgentPositionX =
+                Random.float radius (model.view.gameSize.width - radius)
+
+            generatorAgentMoves =
+                Random.int 0 (List.length moves)
+                    |> Random.map (\index -> List.drop index moves |> List.take opponents.movesLengthMax)
+
+            generatorAgent =
+                Random.map2
+                    (\positionX moves_ ->
+                        { time = time
+                        , position = { x = positionX, y = agent.position.y + model.view.gameSize.height + radius * 2 }
+                        , velocity = { x = 0, y = -agent.velocity.y }
+                        , radius = radius
+                        , moves = moves_
+                        }
+                    )
+                    generatorAgentPositionX
+                    generatorAgentMoves
+        in
+        Cmd.batch
+            [ Random.generate AddOpponent generatorAgent
+            , Init.initOpponentsDelta model
+            ]
+
+    else
+        Cmd.none
+
+
+updateAnimationFrameAgent : Model -> Model.Agent -> Time.Posix -> Int -> Model.Agent
+updateAnimationFrameAgent model agent time delta =
+    let
+        position =
+            updateAnimationFramePosition model agent.radius agent.position agent.velocity time delta
+    in
+    { agent
+        | position = position
+        , velocity = updateAnimationFrameVelocity model agent.radius agent.velocity time delta position
+    }
+
+
+updateAnimationFramePosition : Model -> Float -> Model.Vector -> Model.Vector -> Time.Posix -> Int -> Model.Vector
+updateAnimationFramePosition model radius position velocity _ delta =
+    let
+        xMin =
+            radius
+
+        xMax =
+            model.view.gameSize.width - radius
+
+        x =
+            position.x + Utils.distance velocity.x delta
+    in
+    { position
+        | x =
+            if x < xMin then
+                xMin
+
+            else if x > xMax then
+                xMax
+
+            else
+                x
+        , y = position.y + Utils.distance velocity.y delta
+    }
+
+
+updateAnimationFrameVelocity : Model -> Float -> Model.Vector -> Time.Posix -> Int -> Model.Vector -> Model.Vector
+updateAnimationFrameVelocity model radius velocity _ _ position =
+    let
+        x =
+            if position.x <= radius || position.x >= model.view.gameSize.width - radius then
+                0
+
+            else if velocity.x > model.friction then
+                velocity.x - model.friction
+
+            else if velocity.x < -model.friction then
+                velocity.x + model.friction
+
+            else
+                0
+    in
+    { velocity | x = x }
+
+
+updateAnimationFrameOpponents : Model -> Model.Opponents -> Time.Posix -> Int -> Model.Opponents
+updateAnimationFrameOpponents model opponents time delta =
+    { opponents
+        | delta = opponents.delta - delta
+        , agents =
+            opponents.agents
+                |> List.map
+                    (\agent ->
+                        let
+                            delta_ =
+                                Time.posixToMillis time - Time.posixToMillis agent.time
+
+                            agent_ =
+                                updateAnimationFrameAgent model agent time delta
+                        in
+                        case agent_.moves of
+                            [] ->
+                                agent_
+
+                            move :: moves ->
+                                if move.delta < delta_ then
+                                    { agent_
+                                        | time = time
+                                        , velocity = updateKeyDownDirectionVelocity model agent_.velocity move.direction
+                                        , moves = moves
+                                    }
+
+                                else
+                                    agent_
+                    )
+                |> List.filter (\agent -> model.player.agent.position.y - agent.position.y <= model.view.gamePlayerPositionY + agent.radius * 2)
+    }
 
 
 updateKeyDownDirection : Model -> Model.Direction -> ( Model, Cmd Msg )
@@ -22,147 +244,45 @@ updateKeyDownDirection model direction =
     let
         player =
             model.player
-
-        velocity =
-            player.velocity
-
-        move =
-            player.move
     in
+    ( { model | player = { player | agent = updateKeyDownDirectionAgent model player.agent direction } }, Cmd.none )
+
+
+updateKeyDownDirectionAgent : Model -> Model.Agent -> Model.Direction -> Model.Agent
+updateKeyDownDirectionAgent model agent direction =
+    { agent
+        | time = model.time
+        , velocity = updateKeyDownDirectionVelocity model agent.velocity direction
+        , moves = updateKeyDownDirectionMoves model agent.moves direction agent.time
+    }
+
+
+updateKeyDownDirectionVelocity : Model -> Model.Vector -> Model.Direction -> Model.Vector
+updateKeyDownDirectionVelocity model velocity direction =
     case direction of
         Model.Left ->
-            ( { model
-                | player =
-                    { player
-                        | velocity = { velocity | x = velocity.x - model.acceleration }
-                        , move = updateKeyDownDirectionMove model Model.Left move
-                    }
-                , moveDistance = model.distance
-              }
-            , Cmd.none
-            )
+            { velocity | x = velocity.x - model.acceleration }
 
         Model.Right ->
-            ( { model
-                | player =
-                    { player
-                        | velocity = { velocity | x = velocity.x + model.acceleration }
-                        , move = updateKeyDownDirectionMove model Model.Right move
-                    }
-                , moveDistance = model.distance
-              }
-            , Cmd.none
-            )
+            { velocity | x = velocity.x + model.acceleration }
 
-        Model.Other ->
-            ( model
-            , Cmd.none
-            )
+        _ ->
+            velocity
 
 
-updateKeyDownDirectionMove : Model -> Model.Direction -> List Model.Move -> List Model.Move
-updateKeyDownDirectionMove model direction move =
-    List.take model.moveLengthMax <|
-        { distanceDelta = model.distance - model.moveDistance, direction = direction } :: move
-
-
-updateResizeWindow : Model -> Float -> Float -> ( Model, Cmd Msg )
-updateResizeWindow model w h =
+updateKeyDownDirectionMoves : Model -> List Model.Move -> Model.Direction -> Time.Posix -> List Model.Move
+updateKeyDownDirectionMoves model moves direction time =
     let
-        config =
-            model.config
-
-        zoom =
-            if w / h < config.size.width / config.size.height then
-                w / config.size.width
-
-            else
-                h / config.size.height
+        move =
+            { delta = Time.posixToMillis model.time - Time.posixToMillis time, direction = direction }
     in
-    ( { model
-        | config =
-            { config
-                | zoom = zoom
-            }
-      }
-    , Cmd.none
-    )
+    List.take model.player.movesLengthMax <| moves ++ [ move ]
 
 
-updateTick : Model -> Float -> ( Model, Cmd Msg )
-updateTick model delta =
+updateAddOpponent : Model -> Model.Agent -> ( Model, Cmd Msg )
+updateAddOpponent model agent =
     let
-        player =
-            model.player
-
-        position =
-            player.position
-
-        velocity =
-            player.velocity
-
-        distance =
-            updateTickDistance model delta
-
-        positionX =
-            updateTickPositionX model delta
-
-        velocityX =
-            updateTickVelocityX model positionX
+        opponents =
+            model.opponents
     in
-    ( { model
-        | distance = distance
-        , player =
-            { player
-                | position = { position | x = positionX }
-                , velocity = { velocity | x = velocityX }
-            }
-      }
-    , Cmd.none
-    )
-
-
-updateTickDistance : Model -> Float -> Float
-updateTickDistance model delta =
-    model.distance + model.player.velocity.y * delta / 1000
-
-
-updateTickPositionX : Model -> Float -> Float
-updateTickPositionX model delta =
-    let
-        positionX =
-            model.player.position.x + model.player.velocity.x * delta / 1000
-    in
-    if positionX < positionXMin model then
-        positionXMin model
-
-    else if positionX > positionXMax model then
-        positionXMax model
-
-    else
-        positionX
-
-
-updateTickVelocityX : Model -> Float -> Float
-updateTickVelocityX model positionX =
-    if positionX == positionXMin model || positionX == positionXMax model then
-        0
-
-    else if model.player.velocity.x > model.friction then
-        model.player.velocity.x - model.friction
-
-    else if model.player.velocity.x < -model.friction then
-        model.player.velocity.x + model.friction
-
-    else
-        0
-
-
-positionXMin : Model -> Float
-positionXMin model =
-    model.config.playerRadius
-
-
-positionXMax : Model -> Float
-positionXMax model =
-    model.config.gameSize.width - model.config.playerRadius
+    ( { model | opponents = { opponents | agents = opponents.agents ++ [ agent ] } }, Cmd.none )

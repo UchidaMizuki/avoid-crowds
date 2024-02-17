@@ -1,8 +1,13 @@
 module Messages exposing (..)
 
-import Model 
+import Model
+import Time
+
 
 type Msg
-    = KeyDownDirection Model.Direction
-    | ResizeWindow Float Float
-    | Tick Float
+    = Now Time.Posix
+    | Resize Model.Size
+    | OpponentsDelta Int
+    | AnimationFrame Time.Posix
+    | KeyDownDirection Model.Direction
+    | AddOpponent Model.Agent

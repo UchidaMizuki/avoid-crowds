@@ -6541,7 +6541,7 @@ var $author$project$Update$updateOpponentsDelta = F2(
 var $author$project$Update$updateResize = F2(
 	function (model, size) {
 		var view = model.view;
-		var viewSize = {height: view.headerSize.height + view.gameSize.height, width: view.headerSize.width + view.gameSize.width};
+		var viewSize = {height: view.headerSize.height + view.gameSize.height, width: view.gameSize.width};
 		var viewZoom = (_Utils_cmp(size.width / size.height, viewSize.width / viewSize.height) < 0) ? (size.width / viewSize.width) : (size.height / viewSize.height);
 		return _Utils_Tuple2(
 			_Utils_update(

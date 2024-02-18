@@ -55,7 +55,7 @@ updateResize model size =
             model.view
 
         viewSize =
-            { width = view.headerSize.width + view.gameSize.width
+            { width = view.gameSize.width
             , height = view.headerSize.height + view.gameSize.height
             }
 

@@ -48,7 +48,7 @@ viewHeader model =
             , Element.centerY
             , Element.padding <| zoom model model.view.headerPadding
             ]
-            [ Element.text "TODO: Title"
+            [ Element.text "Avoid Crowds"
             , Element.el [ Element.alignRight ] <|
                 Element.text <|
                     (String.fromInt <| floor model.player.agent.position.y)

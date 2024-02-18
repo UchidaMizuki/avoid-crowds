@@ -1,6 +1,5 @@
 module Update exposing (..)
 
-import Html exposing (a)
 import Init
 import Messages exposing (Msg(..))
 import Model exposing (Model)

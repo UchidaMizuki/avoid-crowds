@@ -66,7 +66,7 @@ updateResize model w h =
             view.boxWidth
 
         boxHeight =
-            view.headerHeight + view.gameHeight
+            view.headerHeight + view.gameHeight + view.footerHeight
 
         boxZoom =
             if w / h < boxWidth / boxHeight then

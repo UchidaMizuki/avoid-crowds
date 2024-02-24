@@ -81,6 +81,8 @@ initModelView =
     , gameGroundDashedLength = 2
     , gameGroundDashedWidth = 0.125
     , gamePlayerPositionY = 8.75
+    , footerHeight = 0.5
+    , footerFontSize = 0.25
     , color1 = { red = 244, green = 244, blue = 242, alpha = 1 }
     , color2 = { red = 232, green = 232, blue = 232, alpha = 1 }
     , color3 = { red = 187, green = 191, blue = 202, alpha = 1 }

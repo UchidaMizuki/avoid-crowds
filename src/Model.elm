@@ -2,6 +2,7 @@ module Model exposing (..)
 
 import Element.Font as Font
 import Time
+import Html exposing (footer)
 
 
 type alias Model =
@@ -72,6 +73,8 @@ type alias View =
     , gameGroundDashedLength : Float
     , gameGroundDashedWidth : Float
     , gamePlayerPositionY : Float
+    , footerHeight : Float
+    , footerFontSize : Float
     , color1 : Color
     , color2 : Color
     , color3 : Color

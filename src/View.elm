@@ -26,6 +26,7 @@ view model =
             [ Element.centerX ]
             [ viewHeader model
             , viewGame model
+            , viewFooter model
             ]
 
 
@@ -178,3 +179,31 @@ viewGameOpponents model =
                 []
         )
         model.opponents.agents
+
+
+viewFooter : Model -> Element Msg
+viewFooter model =
+    let
+        fontColor =
+            if model.player.agent.bump then
+                model.view.color5
+
+            else
+                model.view.color4
+    in
+    Element.el
+        [ Element.width Element.fill
+        , Element.height <| Element.px <| boxZoom model model.view.footerHeight
+        , Element.centerX
+        , Element.centerY
+        , Font.size <| boxZoom model model.view.footerFontSize
+        , Font.color <| Element.fromRgb255 fontColor
+        ]
+    <|
+        Element.newTabLink
+            [ Element.centerX
+            , Element.centerY
+            ]
+            { url = "https://github.com/UchidaMizuki/avoid-crowds"
+            , label = Element.text "https://github.com/UchidaMizuki/avoid-crowds"
+            }

@@ -1,8 +1,8 @@
-module Main exposing (..)
+module AvoidCrowds exposing (..)
 
 import Browser
 import Init exposing (init)
-import Messages exposing (Msg)
+import Msg exposing (Msg)
 import Model exposing (Model)
 import Subscriptions exposing (subscriptions)
 import Update exposing (update)

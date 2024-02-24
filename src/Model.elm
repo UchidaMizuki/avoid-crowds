@@ -8,8 +8,11 @@ type alias Model =
     { time : Time.Posix
     , player : Player
     , opponents : Opponents
+    , score : Float
     , acceleration : Float
     , friction : Float
+    , pause : Bool
+    , pauseDelta : Int
     , view : View
     }
 
@@ -26,6 +29,7 @@ type alias Agent =
     , position : Vector
     , velocity : Vector
     , moves : List Move
+    , bump : Bool
     }
 
 
@@ -58,22 +62,21 @@ type alias Opponents =
 
 
 type alias View =
-    { zoom : Float
-    , bodyBackgroundColor : Color
-    , headerSize : Size
-    , headerBackgroundColor : Color
+    { boxZoom : Float
+    , boxWidth : Float
+    , headerHeight : Float
     , headerFontFamily : Font.Font
-    , headerFontColor : Color
     , headerFontSize : Float
     , headerPadding : Float
-    , gameSize : Size
-    , gameBackgroundColor : Color
+    , gameHeight : Float
     , gameGroundDashedLength : Float
     , gameGroundDashedWidth : Float
-    , gameGroundDashedColor : Color
     , gamePlayerPositionY : Float
-    , gamePlayerFillColor : Color
-    , gameOpponentsFillColor : Color
+    , color1 : Color
+    , color2 : Color
+    , color3 : Color
+    , color4 : Color
+    , color5 : Color
     }
 
 
@@ -82,10 +85,4 @@ type alias Color =
     , green : Int
     , blue : Int
     , alpha : Float
-    }
-
-
-type alias Size =
-    { width : Float
-    , height : Float
     }

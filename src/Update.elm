@@ -1,9 +1,11 @@
 module Update exposing (..)
 
+import Browser.Events as Events
 import Init
-import Messages exposing (Msg(..))
 import Model exposing (Model)
+import Msg exposing (Msg(..))
 import Random
+import Task
 import Time
 import Utils
 import View exposing (view)
@@ -15,8 +17,8 @@ update msg model =
         Now time ->
             updateNow model time
 
-        Resize size ->
-            updateResize model size
+        Resize w h ->
+            updateResize model w h
 
         OpponentsDelta delta ->
             updateOpponentsDelta model delta
@@ -29,6 +31,12 @@ update msg model =
 
         AddOpponent agent ->
             updateAddOpponent model agent
+
+        VisibilityChange visibility ->
+            updateVisibilityChange model visibility
+
+        PauseDelta pauseDelta ->
+            ( { model | pauseDelta = pauseDelta }, Cmd.none )
 
 
 updateNow : Model -> Time.Posix -> ( Model, Cmd Msg )
@@ -48,25 +56,26 @@ updateNow model time =
     )
 
 
-updateResize : Model -> Model.Size -> ( Model, Cmd Msg )
-updateResize model size =
+updateResize : Model -> Float -> Float -> ( Model, Cmd Msg )
+updateResize model w h =
     let
         view =
             model.view
 
-        viewSize =
-            { width = view.gameSize.width
-            , height = view.headerSize.height + view.gameSize.height
-            }
+        boxWidth =
+            view.boxWidth
 
-        viewZoom =
-            if size.width / size.height < viewSize.width / viewSize.height then
-                size.width / viewSize.width
+        boxHeight =
+            view.headerHeight + view.gameHeight
+
+        boxZoom =
+            if w / h < boxWidth / boxHeight then
+                w / boxWidth
 
             else
-                size.height / viewSize.height
+                h / boxHeight
     in
-    ( { model | view = { view | zoom = viewZoom } }, Cmd.none )
+    ( { model | view = { view | boxZoom = boxZoom } }, Cmd.none )
 
 
 updateOpponentsDelta : Model -> Int -> ( Model, Cmd Msg )
@@ -80,23 +89,45 @@ updateOpponentsDelta model delta =
 
 updateAnimationFrame : Model -> Time.Posix -> ( Model, Cmd Msg )
 updateAnimationFrame model time =
-    let
-        delta =
-            Time.posixToMillis time - Time.posixToMillis model.time
+    if model.pause then
+        ( model, Cmd.none )
 
-        player =
-            model.player
+    else
+        let
+            delta =
+                Time.posixToMillis time - Time.posixToMillis model.time - model.pauseDelta
 
-        opponents =
-            updateAnimationFrameOpponents model model.opponents time delta
-    in
-    ( { model
-        | time = time
-        , player = { player | agent = updateAnimationFrameAgent model player.agent time delta }
-        , opponents = opponents
-      }
-    , addOpponent model time opponents.delta
-    )
+            player =
+                model.player
+
+            playerAgent =
+                updateAnimationFrameAgent model player.agent time delta
+
+            opponents =
+                updateAnimationFrameOpponents model model.opponents playerAgent time delta
+
+            playerAgentBump =
+                playerAgent.bump || List.any (\agent -> agent.bump) opponents.agents
+
+            score =
+                if playerAgentBump then
+                    model.score
+
+                else
+                    playerAgent.position.y
+            
+            pauseDelta =
+                0
+        in
+        ( { model
+            | time = time
+            , player = { player | agent = { playerAgent | bump = playerAgentBump } }
+            , opponents = opponents
+            , score = score
+            , pauseDelta = pauseDelta
+          }
+        , addOpponent model time opponents.delta
+        )
 
 
 addOpponent : Model -> Time.Posix -> Int -> Cmd Msg
@@ -119,7 +150,7 @@ addOpponent model time delta =
                 opponents.radius
 
             generatorAgentPositionX =
-                Random.float radius (model.view.gameSize.width - radius)
+                Random.float radius (model.view.boxWidth - radius)
 
             generatorAgentMoves =
                 Random.int 0 (List.length moves)
@@ -129,10 +160,11 @@ addOpponent model time delta =
                 Random.map2
                     (\positionX moves_ ->
                         { time = time
-                        , position = { x = positionX, y = agent.position.y + model.view.gameSize.height + radius * 2 }
+                        , position = { x = positionX, y = agent.position.y + model.view.gameHeight + radius * 2 }
                         , velocity = { x = 0, y = -agent.velocity.y }
                         , radius = radius
                         , moves = moves_
+                        , bump = False
                         }
                     )
                     generatorAgentPositionX
@@ -166,7 +198,7 @@ updateAnimationFramePosition model radius position velocity _ delta =
             radius
 
         xMax =
-            model.view.gameSize.width - radius
+            model.view.boxWidth - radius
 
         x =
             position.x + Utils.distance velocity.x delta
@@ -189,7 +221,7 @@ updateAnimationFrameVelocity : Model -> Float -> Model.Vector -> Time.Posix -> I
 updateAnimationFrameVelocity model radius velocity _ _ position =
     let
         x =
-            if position.x <= radius || position.x >= model.view.gameSize.width - radius then
+            if position.x <= radius || position.x >= model.view.boxWidth - radius then
                 0
 
             else if velocity.x > model.friction then
@@ -204,8 +236,8 @@ updateAnimationFrameVelocity model radius velocity _ _ position =
     { velocity | x = x }
 
 
-updateAnimationFrameOpponents : Model -> Model.Opponents -> Time.Posix -> Int -> Model.Opponents
-updateAnimationFrameOpponents model opponents time delta =
+updateAnimationFrameOpponents : Model -> Model.Opponents -> Model.Agent -> Time.Posix -> Int -> Model.Opponents
+updateAnimationFrameOpponents model opponents playerAgent time delta =
     { opponents
         | delta = opponents.delta - delta
         , agents =
@@ -234,17 +266,39 @@ updateAnimationFrameOpponents model opponents time delta =
                                 else
                                     agent_
                     )
-                |> List.filter (\agent -> model.player.agent.position.y - agent.position.y <= model.view.gamePlayerPositionY + agent.radius * 2)
+                |> List.filter (\agent -> model.player.agent.position.y - agent.position.y <= model.view.gameHeight - model.view.gamePlayerPositionY + playerAgent.radius)
+                |> List.map
+                    (\agent ->
+                        let
+                            positionXDelta =
+                                playerAgent.position.x - agent.position.x
+
+                            positionYDelta =
+                                playerAgent.position.y - agent.position.y
+
+                            distance =
+                                sqrt (positionXDelta ^ 2 + positionYDelta ^ 2)
+                        in
+                        if distance < playerAgent.radius + agent.radius then
+                            { agent | bump = True }
+
+                        else
+                            { agent | bump = False }
+                    )
     }
 
 
 updateKeyDownDirection : Model -> Model.Direction -> ( Model, Cmd Msg )
 updateKeyDownDirection model direction =
-    let
-        player =
-            model.player
-    in
-    ( { model | player = { player | agent = updateKeyDownDirectionAgent model player.agent direction } }, Cmd.none )
+    if model.player.agent.bump then
+        ( model, Cmd.none )
+
+    else
+        let
+            player =
+                model.player
+        in
+        ( { model | player = { player | agent = updateKeyDownDirectionAgent model player.agent direction } }, Cmd.none )
 
 
 updateKeyDownDirectionAgent : Model -> Model.Agent -> Model.Direction -> Model.Agent
@@ -285,3 +339,17 @@ updateAddOpponent model agent =
             model.opponents
     in
     ( { model | opponents = { opponents | agents = opponents.agents ++ [ agent ] } }, Cmd.none )
+
+
+updateVisibilityChange : Model -> Events.Visibility -> ( Model, Cmd Msg )
+updateVisibilityChange model visibility =
+    case visibility of
+        Events.Hidden ->
+            ( { model | pause = True }, Cmd.none )
+
+        _ ->
+            ( { model | pause = False }
+            , Time.now
+                |> Task.map (\time -> Time.posixToMillis time - Time.posixToMillis model.time)
+                |> Task.perform PauseDelta
+            )

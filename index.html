@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Main</title>
+  <title>AvoidCrowds</title>
   <style>body { padding: 0; margin: 0; }</style>
 </head>
 
@@ -5257,12 +5257,13 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $author$project$Init$initModelOpponents = {agents: _List_Nil, delta: 0, deltaMin: 250, movesLengthMax: 100, radius: 0.25, rate: 0.0025};
+var $author$project$Init$initModelOpponents = {agents: _List_Nil, delta: 0, deltaMin: 250, movesLengthMax: 100, radius: 0.25, rate: 1 / 500};
 var $elm$time$Time$Posix = function (a) {
 	return {$: 'Posix', a: a};
 };
 var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $author$project$Init$initModelPlayerAgent = {
+	bump: false,
 	moves: _List_Nil,
 	position: {x: 5, y: 0},
 	radius: 0.25,
@@ -5270,10 +5271,6 @@ var $author$project$Init$initModelPlayerAgent = {
 	velocity: {x: 0, y: 1}
 };
 var $author$project$Init$initModelPlayer = {agent: $author$project$Init$initModelPlayerAgent, movesLengthMax: 1000};
-var $author$project$Init$colorGray = {alpha: 1, blue: 232, green: 232, red: 232};
-var $author$project$Init$colorGrayishBlue = {alpha: 1, blue: 100, green: 84, red: 73};
-var $author$project$Init$colorPaleNavy = {alpha: 1, blue: 202, green: 191, red: 187};
-var $author$project$Init$colorWhite = {alpha: 1, blue: 242, green: 244, red: 244};
 var $mdgriffith$elm_ui$Internal$Model$ImportFont = F2(
 	function (a, b) {
 		return {$: 'ImportFont', a: a, b: b};
@@ -5284,33 +5281,35 @@ var $mdgriffith$elm_ui$Element$Font$external = function (_v0) {
 	return A2($mdgriffith$elm_ui$Internal$Model$ImportFont, name, url);
 };
 var $author$project$Init$initModelView = {
-	bodyBackgroundColor: $author$project$Init$colorGray,
-	gameBackgroundColor: $author$project$Init$colorWhite,
-	gameGroundDashedColor: $author$project$Init$colorGray,
+	boxWidth: 10,
+	boxZoom: 1,
+	color1: {alpha: 1, blue: 242, green: 244, red: 244},
+	color2: {alpha: 1, blue: 232, green: 232, red: 232},
+	color3: {alpha: 1, blue: 202, green: 191, red: 187},
+	color4: {alpha: 1, blue: 100, green: 84, red: 73},
+	color5: {alpha: 1, blue: 72, green: 72, red: 208},
 	gameGroundDashedLength: 2,
 	gameGroundDashedWidth: 0.125,
-	gameOpponentsFillColor: $author$project$Init$colorPaleNavy,
-	gamePlayerFillColor: $author$project$Init$colorGrayishBlue,
+	gameHeight: 10,
 	gamePlayerPositionY: 8.75,
-	gameSize: {height: 10, width: 10},
-	headerBackgroundColor: $author$project$Init$colorGrayishBlue,
-	headerFontColor: $author$project$Init$colorWhite,
 	headerFontFamily: $mdgriffith$elm_ui$Element$Font$external(
 		{name: 'Poppins', url: 'https://fonts.googleapis.com/css?family=Poppins'}),
 	headerFontSize: 0.675,
-	headerPadding: 0.25,
-	headerSize: {height: 1.25, width: 10},
-	zoom: 1
+	headerHeight: 1.25,
+	headerPadding: 0.25
 };
 var $author$project$Init$initModel = {
-	acceleration: 5,
-	friction: 2.5,
+	acceleration: 1 / 2,
+	friction: 1 / 8,
 	opponents: $author$project$Init$initModelOpponents,
+	pause: false,
+	pauseDelta: 0,
 	player: $author$project$Init$initModelPlayer,
+	score: 0,
 	time: $elm$time$Time$millisToPosix(0),
 	view: $author$project$Init$initModelView
 };
-var $author$project$Messages$Now = function (a) {
+var $author$project$Msg$Now = function (a) {
 	return {$: 'Now', a: a};
 };
 var $elm$time$Time$Name = function (a) {
@@ -5326,9 +5325,9 @@ var $elm$time$Time$Zone = F2(
 var $elm$time$Time$customZone = $elm$time$Time$Zone;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
 var $author$project$Init$initNow = function (_v0) {
-	return A2($elm$core$Task$perform, $author$project$Messages$Now, $elm$time$Time$now);
+	return A2($elm$core$Task$perform, $author$project$Msg$Now, $elm$time$Time$now);
 };
-var $author$project$Messages$OpponentsDelta = function (a) {
+var $author$project$Msg$OpponentsDelta = function (a) {
 	return {$: 'OpponentsDelta', a: a};
 };
 var $elm$core$Basics$composeL = F3(
@@ -5469,7 +5468,7 @@ var $elm$random$Random$generate = F2(
 var $author$project$Init$initOpponentsDelta = function (model) {
 	return A2(
 		$elm$random$Random$generate,
-		$author$project$Messages$OpponentsDelta,
+		$author$project$Msg$OpponentsDelta,
 		A2(
 			$elm$random$Random$map,
 			A2(
@@ -5478,9 +5477,10 @@ var $author$project$Init$initOpponentsDelta = function (model) {
 				$elm$core$Basics$floor),
 			$author$project$Utils$exponential(model.opponents.rate)));
 };
-var $author$project$Messages$Resize = function (a) {
-	return {$: 'Resize', a: a};
-};
+var $author$project$Msg$Resize = F2(
+	function (a, b) {
+		return {$: 'Resize', a: a, b: b};
+	});
 var $elm$browser$Browser$Dom$getViewport = _Browser_withWindow(_Browser_getViewport);
 var $author$project$Init$initResize = function (_v0) {
 	return A2(
@@ -5488,8 +5488,7 @@ var $author$project$Init$initResize = function (_v0) {
 		function (_v2) {
 			var w = _v2.a;
 			var h = _v2.b;
-			return $author$project$Messages$Resize(
-				{height: h, width: w});
+			return A2($author$project$Msg$Resize, w, h);
 		},
 		A2(
 			$elm$core$Task$map,
@@ -5510,11 +5509,14 @@ var $author$project$Init$init = function (_v0) {
 					$author$project$Init$initOpponentsDelta($author$project$Init$initModel)
 				])));
 };
-var $author$project$Messages$AnimationFrame = function (a) {
+var $author$project$Msg$AnimationFrame = function (a) {
 	return {$: 'AnimationFrame', a: a};
 };
-var $author$project$Messages$KeyDownDirection = function (a) {
+var $author$project$Msg$KeyDownDirection = function (a) {
 	return {$: 'KeyDownDirection', a: a};
+};
+var $author$project$Msg$VisibilityChange = function (a) {
+	return {$: 'VisibilityChange', a: a};
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$json$Json$Decode$field = _Json_decodeField;
@@ -6076,6 +6078,28 @@ var $elm$browser$Browser$Events$onResize = function (func) {
 				A2($elm$json$Json$Decode$field, 'innerWidth', $elm$json$Json$Decode$int),
 				A2($elm$json$Json$Decode$field, 'innerHeight', $elm$json$Json$Decode$int))));
 };
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$browser$Browser$Events$Hidden = {$: 'Hidden'};
+var $elm$browser$Browser$Events$Visible = {$: 'Visible'};
+var $elm$browser$Browser$Events$withHidden = F2(
+	function (func, isHidden) {
+		return func(
+			isHidden ? $elm$browser$Browser$Events$Hidden : $elm$browser$Browser$Events$Visible);
+	});
+var $elm$browser$Browser$Events$onVisibilityChange = function (func) {
+	var info = _Browser_visibilityInfo(_Utils_Tuple0);
+	return A3(
+		$elm$browser$Browser$Events$on,
+		$elm$browser$Browser$Events$Document,
+		info.change,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$browser$Browser$Events$withHidden(func),
+			A2(
+				$elm$json$Json$Decode$field,
+				'target',
+				A2($elm$json$Json$Decode$field, info.hidden, $elm$json$Json$Decode$bool))));
+};
 var $author$project$Subscriptions$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
@@ -6083,12 +6107,12 @@ var $author$project$Subscriptions$subscriptions = function (_v0) {
 				$elm$browser$Browser$Events$onResize(
 				F2(
 					function (width, height) {
-						return $author$project$Messages$Resize(
-							{height: height, width: width});
+						return A2($author$project$Msg$Resize, width, height);
 					})),
-				$elm$browser$Browser$Events$onAnimationFrame($author$project$Messages$AnimationFrame),
+				$elm$browser$Browser$Events$onAnimationFrame($author$project$Msg$AnimationFrame),
 				$elm$browser$Browser$Events$onKeyDown(
-				A2($elm$json$Json$Decode$map, $author$project$Messages$KeyDownDirection, $author$project$Subscriptions$keyDecoder))
+				A2($elm$json$Json$Decode$map, $author$project$Msg$KeyDownDirection, $author$project$Subscriptions$keyDecoder)),
+				$elm$browser$Browser$Events$onVisibilityChange($author$project$Msg$VisibilityChange)
 			]));
 };
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -6110,7 +6134,7 @@ var $author$project$Update$updateAddOpponent = F2(
 				}),
 			$elm$core$Platform$Cmd$none);
 	});
-var $author$project$Messages$AddOpponent = function (a) {
+var $author$project$Msg$AddOpponent = function (a) {
 	return {$: 'AddOpponent', a: a};
 };
 var $elm$core$List$drop = F2(
@@ -6315,7 +6339,7 @@ var $author$project$Update$addOpponent = F3(
 			var player = model.player;
 			var opponents = model.opponents;
 			var radius = opponents.radius;
-			var generatorAgentPositionX = A2($elm$random$Random$float, radius, model.view.gameSize.width - radius);
+			var generatorAgentPositionX = A2($elm$random$Random$float, radius, model.view.boxWidth - radius);
 			var agent = player.agent;
 			var moves = agent.moves;
 			var generatorAgentMoves = A2(
@@ -6335,8 +6359,9 @@ var $author$project$Update$addOpponent = F3(
 				F2(
 					function (positionX, moves_) {
 						return {
+							bump: false,
 							moves: moves_,
-							position: {x: positionX, y: (agent.position.y + model.view.gameSize.height) + (radius * 2)},
+							position: {x: positionX, y: (agent.position.y + model.view.gameHeight) + (radius * 2)},
 							radius: radius,
 							time: time,
 							velocity: {x: 0, y: -agent.velocity.y}
@@ -6347,11 +6372,32 @@ var $author$project$Update$addOpponent = F3(
 			return $elm$core$Platform$Cmd$batch(
 				_List_fromArray(
 					[
-						A2($elm$random$Random$generate, $author$project$Messages$AddOpponent, generatorAgent),
+						A2($elm$random$Random$generate, $author$project$Msg$AddOpponent, generatorAgent),
 						$author$project$Init$initOpponentsDelta(model)
 					]));
 		} else {
 			return $elm$core$Platform$Cmd$none;
+		}
+	});
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
 		}
 	});
 var $author$project$Utils$distance = F2(
@@ -6361,7 +6407,7 @@ var $author$project$Utils$distance = F2(
 var $author$project$Update$updateAnimationFramePosition = F6(
 	function (model, radius, position, velocity, _v0, delta) {
 		var xMin = radius;
-		var xMax = model.view.gameSize.width - radius;
+		var xMax = model.view.boxWidth - radius;
 		var x = position.x + A2($author$project$Utils$distance, velocity.x, delta);
 		return _Utils_update(
 			position,
@@ -6373,7 +6419,7 @@ var $author$project$Update$updateAnimationFramePosition = F6(
 var $elm$core$Basics$ge = _Utils_ge;
 var $author$project$Update$updateAnimationFrameVelocity = F6(
 	function (model, radius, velocity, _v0, _v1, position) {
-		var x = ((_Utils_cmp(position.x, radius) < 1) || (_Utils_cmp(position.x, model.view.gameSize.width - radius) > -1)) ? 0 : ((_Utils_cmp(velocity.x, model.friction) > 0) ? (velocity.x - model.friction) : ((_Utils_cmp(velocity.x, -model.friction) < 0) ? (velocity.x + model.friction) : 0));
+		var x = ((_Utils_cmp(position.x, radius) < 1) || (_Utils_cmp(position.x, model.view.boxWidth - radius) > -1)) ? 0 : ((_Utils_cmp(velocity.x, model.friction) > 0) ? (velocity.x - model.friction) : ((_Utils_cmp(velocity.x, -model.friction) < 0) ? (velocity.x + model.friction) : 0));
 		return _Utils_update(
 			velocity,
 			{x: x});
@@ -6399,6 +6445,8 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
+var $elm$core$Basics$pow = _Basics_pow;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
 var $author$project$Update$updateKeyDownDirectionVelocity = F3(
 	function (model, velocity, direction) {
 		switch (direction.$) {
@@ -6414,58 +6462,88 @@ var $author$project$Update$updateKeyDownDirectionVelocity = F3(
 				return velocity;
 		}
 	});
-var $author$project$Update$updateAnimationFrameOpponents = F4(
-	function (model, opponents, time, delta) {
+var $author$project$Update$updateAnimationFrameOpponents = F5(
+	function (model, opponents, playerAgent, time, delta) {
 		return _Utils_update(
 			opponents,
 			{
 				agents: A2(
-					$elm$core$List$filter,
+					$elm$core$List$map,
 					function (agent) {
-						return _Utils_cmp(model.player.agent.position.y - agent.position.y, model.view.gamePlayerPositionY + (agent.radius * 2)) < 1;
+						var positionYDelta = playerAgent.position.y - agent.position.y;
+						var positionXDelta = playerAgent.position.x - agent.position.x;
+						var distance = $elm$core$Basics$sqrt(
+							A2($elm$core$Basics$pow, positionXDelta, 2) + A2($elm$core$Basics$pow, positionYDelta, 2));
+						return (_Utils_cmp(distance, playerAgent.radius + agent.radius) < 0) ? _Utils_update(
+							agent,
+							{bump: true}) : _Utils_update(
+							agent,
+							{bump: false});
 					},
 					A2(
-						$elm$core$List$map,
+						$elm$core$List$filter,
 						function (agent) {
-							var delta_ = $elm$time$Time$posixToMillis(time) - $elm$time$Time$posixToMillis(agent.time);
-							var agent_ = A4($author$project$Update$updateAnimationFrameAgent, model, agent, time, delta);
-							var _v0 = agent_.moves;
-							if (!_v0.b) {
-								return agent_;
-							} else {
-								var move = _v0.a;
-								var moves = _v0.b;
-								return (_Utils_cmp(move.delta, delta_) < 0) ? _Utils_update(
-									agent_,
-									{
-										moves: moves,
-										time: time,
-										velocity: A3($author$project$Update$updateKeyDownDirectionVelocity, model, agent_.velocity, move.direction)
-									}) : agent_;
-							}
+							return _Utils_cmp(model.player.agent.position.y - agent.position.y, (model.view.gameHeight - model.view.gamePlayerPositionY) + playerAgent.radius) < 1;
 						},
-						opponents.agents)),
+						A2(
+							$elm$core$List$map,
+							function (agent) {
+								var delta_ = $elm$time$Time$posixToMillis(time) - $elm$time$Time$posixToMillis(agent.time);
+								var agent_ = A4($author$project$Update$updateAnimationFrameAgent, model, agent, time, delta);
+								var _v0 = agent_.moves;
+								if (!_v0.b) {
+									return agent_;
+								} else {
+									var move = _v0.a;
+									var moves = _v0.b;
+									return (_Utils_cmp(move.delta, delta_) < 0) ? _Utils_update(
+										agent_,
+										{
+											moves: moves,
+											time: time,
+											velocity: A3($author$project$Update$updateKeyDownDirectionVelocity, model, agent_.velocity, move.direction)
+										}) : agent_;
+								}
+							},
+							opponents.agents))),
 				delta: opponents.delta - delta
 			});
 	});
 var $author$project$Update$updateAnimationFrame = F2(
 	function (model, time) {
-		var player = model.player;
-		var delta = $elm$time$Time$posixToMillis(time) - $elm$time$Time$posixToMillis(model.time);
-		var opponents = A4($author$project$Update$updateAnimationFrameOpponents, model, model.opponents, time, delta);
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{
-					opponents: opponents,
-					player: _Utils_update(
-						player,
-						{
-							agent: A4($author$project$Update$updateAnimationFrameAgent, model, player.agent, time, delta)
-						}),
-					time: time
-				}),
-			A3($author$project$Update$addOpponent, model, time, opponents.delta));
+		if (model.pause) {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		} else {
+			var player = model.player;
+			var pauseDelta = 0;
+			var delta = ($elm$time$Time$posixToMillis(time) - $elm$time$Time$posixToMillis(model.time)) - model.pauseDelta;
+			var playerAgent = A4($author$project$Update$updateAnimationFrameAgent, model, player.agent, time, delta);
+			var opponents = A5($author$project$Update$updateAnimationFrameOpponents, model, model.opponents, playerAgent, time, delta);
+			var playerAgentBump = playerAgent.bump || A2(
+				$elm$core$List$any,
+				function (agent) {
+					return agent.bump;
+				},
+				opponents.agents);
+			var score = playerAgentBump ? model.score : playerAgent.position.y;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						opponents: opponents,
+						pauseDelta: pauseDelta,
+						player: _Utils_update(
+							player,
+							{
+								agent: _Utils_update(
+									playerAgent,
+									{bump: playerAgentBump})
+							}),
+						score: score,
+						time: time
+					}),
+				A3($author$project$Update$addOpponent, model, time, opponents.delta));
+		}
 	});
 var $author$project$Update$updateKeyDownDirectionMoves = F4(
 	function (model, moves, direction, time) {
@@ -6493,18 +6571,22 @@ var $author$project$Update$updateKeyDownDirectionAgent = F3(
 	});
 var $author$project$Update$updateKeyDownDirection = F2(
 	function (model, direction) {
-		var player = model.player;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{
-					player: _Utils_update(
-						player,
-						{
-							agent: A3($author$project$Update$updateKeyDownDirectionAgent, model, player.agent, direction)
-						})
-				}),
-			$elm$core$Platform$Cmd$none);
+		if (model.player.agent.bump) {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		} else {
+			var player = model.player;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						player: _Utils_update(
+							player,
+							{
+								agent: A3($author$project$Update$updateKeyDownDirectionAgent, model, player.agent, direction)
+							})
+					}),
+				$elm$core$Platform$Cmd$none);
+		}
 	});
 var $author$project$Update$updateNow = F2(
 	function (model, time) {
@@ -6538,20 +6620,48 @@ var $author$project$Update$updateOpponentsDelta = F2(
 				}),
 			$elm$core$Platform$Cmd$none);
 	});
-var $author$project$Update$updateResize = F2(
-	function (model, size) {
+var $author$project$Update$updateResize = F3(
+	function (model, w, h) {
 		var view = model.view;
-		var viewSize = {height: view.headerSize.height + view.gameSize.height, width: view.gameSize.width};
-		var viewZoom = (_Utils_cmp(size.width / size.height, viewSize.width / viewSize.height) < 0) ? (size.width / viewSize.width) : (size.height / viewSize.height);
+		var boxWidth = view.boxWidth;
+		var boxHeight = view.headerHeight + view.gameHeight;
+		var boxZoom = (_Utils_cmp(w / h, boxWidth / boxHeight) < 0) ? (w / boxWidth) : (h / boxHeight);
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
 					view: _Utils_update(
 						view,
-						{zoom: viewZoom})
+						{boxZoom: boxZoom})
 				}),
 			$elm$core$Platform$Cmd$none);
+	});
+var $author$project$Msg$PauseDelta = function (a) {
+	return {$: 'PauseDelta', a: a};
+};
+var $author$project$Update$updateVisibilityChange = F2(
+	function (model, visibility) {
+		if (visibility.$ === 'Hidden') {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{pause: true}),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{pause: false}),
+				A2(
+					$elm$core$Task$perform,
+					$author$project$Msg$PauseDelta,
+					A2(
+						$elm$core$Task$map,
+						function (time) {
+							return $elm$time$Time$posixToMillis(time) - $elm$time$Time$posixToMillis(model.time);
+						},
+						$elm$time$Time$now)));
+		}
 	});
 var $author$project$Update$update = F2(
 	function (msg, model) {
@@ -6560,8 +6670,9 @@ var $author$project$Update$update = F2(
 				var time = msg.a;
 				return A2($author$project$Update$updateNow, model, time);
 			case 'Resize':
-				var size = msg.a;
-				return A2($author$project$Update$updateResize, model, size);
+				var w = msg.a;
+				var h = msg.b;
+				return A3($author$project$Update$updateResize, model, w, h);
 			case 'OpponentsDelta':
 				var delta = msg.a;
 				return A2($author$project$Update$updateOpponentsDelta, model, delta);
@@ -6571,9 +6682,19 @@ var $author$project$Update$update = F2(
 			case 'KeyDownDirection':
 				var direction = msg.a;
 				return A2($author$project$Update$updateKeyDownDirection, model, direction);
-			default:
+			case 'AddOpponent':
 				var agent = msg.a;
 				return A2($author$project$Update$updateAddOpponent, model, agent);
+			case 'VisibilityChange':
+				var visibility = msg.a;
+				return A2($author$project$Update$updateVisibilityChange, model, visibility);
+			default:
+				var pauseDelta = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{pauseDelta: pauseDelta}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
@@ -9236,27 +9357,6 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $mdgriffith$elm_ui$Internal$Model$fontName = function (font) {
 	switch (font.$) {
 		case 'Serif':
@@ -12382,6 +12482,10 @@ var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
 };
 var $mdgriffith$elm_ui$Internal$Model$Bottom = {$: 'Bottom'};
 var $mdgriffith$elm_ui$Element$alignBottom = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Bottom);
+var $author$project$View$boxZoom = F2(
+	function (model, size) {
+		return $elm$core$Basics$floor(model.view.boxZoom * size);
+	});
 var $mdgriffith$elm_ui$Element$el = F2(
 	function (attrs, child) {
 		return A4(
@@ -12584,17 +12688,13 @@ var $elm_community$typed_svg$TypedSvg$Attributes$y2 = function (position) {
 		'y2',
 		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(position));
 };
-var $author$project$View$zoom = F2(
-	function (model, size) {
-		return $elm$core$Basics$floor(model.view.zoom * size);
-	});
 var $author$project$View$viewGameGround = function (model) {
-	var gameSizeWidth = A2($author$project$View$zoom, model, model.view.gameSize.width);
-	var gameSizeHeight = A2($author$project$View$zoom, model, model.view.gameSize.height);
-	var gameGroundDashedLength = A2($author$project$View$zoom, model, model.view.gameGroundDashedLength);
+	var gameSizeWidth = A2($author$project$View$boxZoom, model, model.view.boxWidth);
+	var gameSizeHeight = A2($author$project$View$boxZoom, model, model.view.gameHeight);
+	var gameGroundDashedLength = A2($author$project$View$boxZoom, model, model.view.gameGroundDashedLength);
 	var gameGroundDashedNumber = ((gameSizeHeight / gameGroundDashedLength) | 0) + 1;
 	var distance = A2(
-		$author$project$View$zoom,
+		$author$project$View$boxZoom,
 		model,
 		A2(
 			$author$project$Utils$distance,
@@ -12620,10 +12720,10 @@ var $author$project$View$viewGameGround = function (model) {
 						$elm_community$typed_svg$TypedSvg$Types$px(gameGroundDashedTo)),
 						$elm_community$typed_svg$TypedSvg$Attributes$stroke(
 						$elm_community$typed_svg$TypedSvg$Types$Paint(
-							$author$project$Utils$fromRgb255(model.view.gameGroundDashedColor))),
+							$author$project$Utils$fromRgb255(model.view.color2))),
 						$elm_community$typed_svg$TypedSvg$Attributes$strokeWidth(
 						$elm_community$typed_svg$TypedSvg$Types$Px(
-							A2($author$project$View$zoom, model, model.view.gameGroundDashedWidth)))
+							A2($author$project$View$boxZoom, model, model.view.gameGroundDashedWidth)))
 					]),
 				_List_Nil);
 		},
@@ -12656,50 +12756,52 @@ var $author$project$View$viewGameOpponents = function (model) {
 	return A2(
 		$elm$core$List$map,
 		function (agent) {
+			var color = agent.bump ? model.view.color5 : model.view.color3;
 			return A2(
 				$elm_community$typed_svg$TypedSvg$circle,
 				_List_fromArray(
 					[
 						$elm_community$typed_svg$TypedSvg$Attributes$cx(
 						$elm_community$typed_svg$TypedSvg$Types$px(
-							A2($author$project$View$zoom, model, agent.position.x))),
+							A2($author$project$View$boxZoom, model, agent.position.x))),
 						$elm_community$typed_svg$TypedSvg$Attributes$cy(
 						$elm_community$typed_svg$TypedSvg$Types$px(
-							A2($author$project$View$zoom, model, (model.view.gamePlayerPositionY + model.player.agent.position.y) - agent.position.y))),
+							A2($author$project$View$boxZoom, model, (model.view.gamePlayerPositionY + model.player.agent.position.y) - agent.position.y))),
 						$elm_community$typed_svg$TypedSvg$Attributes$r(
 						$elm_community$typed_svg$TypedSvg$Types$px(
-							A2($author$project$View$zoom, model, agent.radius))),
+							A2($author$project$View$boxZoom, model, agent.radius))),
 						$elm_community$typed_svg$TypedSvg$Attributes$fill(
 						$elm_community$typed_svg$TypedSvg$Types$Paint(
-							$author$project$Utils$fromRgb255(model.view.gameOpponentsFillColor)))
+							$author$project$Utils$fromRgb255(color)))
 					]),
 				_List_Nil);
 		},
 		model.opponents.agents);
 };
 var $author$project$View$viewGamePlayer = function (model) {
+	var color = model.player.agent.bump ? model.view.color5 : model.view.color4;
 	return A2(
 		$elm_community$typed_svg$TypedSvg$circle,
 		_List_fromArray(
 			[
 				$elm_community$typed_svg$TypedSvg$Attributes$cx(
 				$elm_community$typed_svg$TypedSvg$Types$px(
-					A2($author$project$View$zoom, model, model.player.agent.position.x))),
+					A2($author$project$View$boxZoom, model, model.player.agent.position.x))),
 				$elm_community$typed_svg$TypedSvg$Attributes$cy(
 				$elm_community$typed_svg$TypedSvg$Types$px(
-					A2($author$project$View$zoom, model, model.view.gamePlayerPositionY))),
+					A2($author$project$View$boxZoom, model, model.view.gamePlayerPositionY))),
 				$elm_community$typed_svg$TypedSvg$Attributes$r(
 				$elm_community$typed_svg$TypedSvg$Types$px(
-					A2($author$project$View$zoom, model, model.player.agent.radius))),
+					A2($author$project$View$boxZoom, model, model.player.agent.radius))),
 				$elm_community$typed_svg$TypedSvg$Attributes$fill(
 				$elm_community$typed_svg$TypedSvg$Types$Paint(
-					$author$project$Utils$fromRgb255(model.view.gamePlayerFillColor)))
+					$author$project$Utils$fromRgb255(color)))
 			]),
 		_List_Nil);
 };
 var $author$project$View$viewGame = function (model) {
-	var gameSizeWidth = A2($author$project$View$zoom, model, model.view.gameSize.width);
-	var gameSizeHeight = A2($author$project$View$zoom, model, model.view.gameSize.height);
+	var gameSizeWidth = A2($author$project$View$boxZoom, model, model.view.boxWidth);
+	var gameSizeHeight = A2($author$project$View$boxZoom, model, model.view.gameHeight);
 	return A2(
 		$mdgriffith$elm_ui$Element$el,
 		_List_fromArray(
@@ -12711,7 +12813,7 @@ var $author$project$View$viewGame = function (model) {
 				$mdgriffith$elm_ui$Element$centerX,
 				$mdgriffith$elm_ui$Element$alignBottom,
 				$mdgriffith$elm_ui$Element$Background$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.view.gameBackgroundColor))
+				$mdgriffith$elm_ui$Element$fromRgb255(model.view.color1))
 			]),
 		$mdgriffith$elm_ui$Element$html(
 			A2(
@@ -12801,27 +12903,28 @@ var $mdgriffith$elm_ui$Element$text = function (content) {
 	return $mdgriffith$elm_ui$Internal$Model$Text(content);
 };
 var $author$project$View$viewHeader = function (model) {
+	var backGropundColor = model.player.agent.bump ? model.view.color5 : model.view.color4;
 	return A2(
 		$mdgriffith$elm_ui$Element$el,
 		_List_fromArray(
 			[
 				$mdgriffith$elm_ui$Element$width(
 				$mdgriffith$elm_ui$Element$px(
-					A2($author$project$View$zoom, model, model.view.headerSize.width))),
+					A2($author$project$View$boxZoom, model, model.view.boxWidth))),
 				$mdgriffith$elm_ui$Element$height(
 				$mdgriffith$elm_ui$Element$px(
-					A2($author$project$View$zoom, model, model.view.headerSize.height))),
+					A2($author$project$View$boxZoom, model, model.view.headerHeight))),
 				$mdgriffith$elm_ui$Element$centerX,
 				$mdgriffith$elm_ui$Element$centerY,
 				$mdgriffith$elm_ui$Element$Background$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.view.headerBackgroundColor)),
+				$mdgriffith$elm_ui$Element$fromRgb255(backGropundColor)),
 				$mdgriffith$elm_ui$Element$Font$family(
 				_List_fromArray(
 					[model.view.headerFontFamily])),
 				$mdgriffith$elm_ui$Element$Font$size(
-				A2($author$project$View$zoom, model, model.view.headerFontSize)),
+				A2($author$project$View$boxZoom, model, model.view.headerFontSize)),
 				$mdgriffith$elm_ui$Element$Font$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.view.headerFontColor))
+				$mdgriffith$elm_ui$Element$fromRgb255(model.view.color1))
 			]),
 		A2(
 			$mdgriffith$elm_ui$Element$row,
@@ -12830,7 +12933,7 @@ var $author$project$View$viewHeader = function (model) {
 					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 					$mdgriffith$elm_ui$Element$centerY,
 					$mdgriffith$elm_ui$Element$padding(
-					A2($author$project$View$zoom, model, model.view.headerPadding))
+					A2($author$project$View$boxZoom, model, model.view.headerPadding))
 				]),
 			_List_fromArray(
 				[
@@ -12841,7 +12944,7 @@ var $author$project$View$viewHeader = function (model) {
 						[$mdgriffith$elm_ui$Element$alignRight]),
 					$mdgriffith$elm_ui$Element$text(
 						$elm$core$String$fromInt(
-							$elm$core$Basics$floor(model.player.agent.position.y)) + ' m'))
+							$elm$core$Basics$floor(model.score)) + ' m'))
 				])));
 };
 var $author$project$View$view = function (model) {
@@ -12852,7 +12955,7 @@ var $author$project$View$view = function (model) {
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$Background$color(
-				$mdgriffith$elm_ui$Element$fromRgb255(model.view.bodyBackgroundColor))
+				$mdgriffith$elm_ui$Element$fromRgb255(model.view.color2))
 			]),
 		A2(
 			$mdgriffith$elm_ui$Element$column,
@@ -12864,12 +12967,12 @@ var $author$project$View$view = function (model) {
 					$author$project$View$viewGame(model)
 				])));
 };
-var $author$project$Main$main = $elm$browser$Browser$element(
+var $author$project$AvoidCrowds$main = $elm$browser$Browser$element(
 	{init: $author$project$Init$init, subscriptions: $author$project$Subscriptions$subscriptions, update: $author$project$Update$update, view: $author$project$View$view});
-_Platform_export({'Main':{'init':$author$project$Main$main(
+_Platform_export({'AvoidCrowds':{'init':$author$project$AvoidCrowds$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
 
-  var app = Elm.Main.init({ node: document.getElementById("elm") });
+  var app = Elm.AvoidCrowds.init({ node: document.getElementById("elm") });
 }
 catch (e)
 {
